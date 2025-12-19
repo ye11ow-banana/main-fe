@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ServiceHub – Add day</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --color-primary: #2563EB;
+      --radius-pill: 9999px;
+      --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body.theme-light {
+      --color-bg: #FFFFFF;
+      --color-header: #FFFFFF;
+      --color-border-subtle: #E5E7EB;
+      --color-text-primary: #111827;
+      --color-text-secondary: #6B7280;
+      --color-input-bg: #F9FAFB;
+      --color-input-border: #E5E7EB;
+      --color-input-placeholder: #9CA3AF;
+      --color-modal-bg: #FFFFFF;
+    }
+
+    body.theme-dark {
+      --color-bg: #020617;
+      --color-header: #020617;
+      --color-border-subtle: #1F2937;
+      --color-text-primary: #F9FAFB;
+      --color-text-secondary: #9CA3AF;
+      --color-input-bg: #020617;
+      --color-input-border: #1F2937;
+      --color-input-placeholder: #6B7280;
+      --color-modal-bg: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-family);
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* HEADER */
+    .header {
+      width: 100%;
+      background: var(--color-header);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .header-inner {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .header-left,
+    .header-center,
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+    .header-left { flex: 0 0 auto; gap: 8px; }
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--color-primary);
+    }
+    .logo-text {
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.01em;
+    }
+    .header-center { flex: 1 1 auto; justify-content: center; }
+    .search {
+      max-width: 520px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-header);
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-border-subtle);
+      padding: 8px 14px;
+    }
+    .search-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid var(--color-input-placeholder);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--color-input-placeholder);
+      right: -4px;
+      bottom: -1px;
+      transform: rotate(45deg);
+    }
+    .search-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--color-text-primary);
+    }
+    .search-input::placeholder { color: var(--color-input-placeholder); }
+
+    .header-right {
+      flex: 0 0 auto;
+      gap: 12px;
+      margin-left: auto;
+    }
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: 18px;
+    }
+    .avatar-block { display: flex; align-items: center; gap: 10px; }
+    .avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #38BDF8, #2563EB);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .avatar-name { font-size: 14px; font-weight: 500; white-space: nowrap; }
+    .icon-button--search { display: none; }
+    .icon-button--bell { display: flex; }
+
+    /* MAIN */
+    .main {
+      padding-top: 32px;
+      padding-bottom: 40px;
+    }
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 20px;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      max-width: 480px;
+    }
+
+    .form-wrapper {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .form-card {
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* PROGRESS */
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .progress-step {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      text-align: left;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    }
+    .progress-step-index {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      background: #E5E7EB;
+      color: #111827;
+      flex-shrink: 0;
+    }
+    .progress-step-label-main { font-weight: 500; display: block; }
+    .progress-step-label-sub {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+    .progress-step--active {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.4);
+      color: var(--color-text-primary);
+    }
+    .progress-step--active .progress-step-index {
+      background: var(--color-primary);
+      color: #FFFFFF;
+    }
+    .progress-step--completed {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--color-text-primary);
+    }
+    .progress-step--completed .progress-step-index {
+      background: #10B981;
+      color: #FFFFFF;
+    }
+    .progress-line {
+      width: 26px;
+      height: 1px;
+      background: var(--color-border-subtle);
+      flex: 0 0 auto;
+    }
+
+    .step-section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+    .form-description {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    .form-body {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 8px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .field-hint {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .field-input {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--color-input-border);
+      background: var(--color-input-bg);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .field-input::placeholder { color: var(--color-input-placeholder); }
+    .field-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+    }
+    textarea.field-input { resize: vertical; min-height: 90px; }
+
+    .file-input-wrapper { position: relative; }
+    .file-input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .file-visual {
+      border-radius: 14px;
+      border: 1px dashed var(--color-input-border);
+      background: var(--color-input-bg);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .file-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .file-text-main { font-size: 14px; font-weight: 500; }
+    .file-text-sub { font-size: 12px; color: var(--color-text-secondary); }
+    .file-visual:hover {
+      border-color: var(--color-primary);
+      background: #EFF6FF;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.16);
+    }
+
+    /* REVIEW TABLE */
+    .review-section { margin-top: 4px; }
+    .review-items {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .review-header {
+      display: grid;
+      grid-template-columns: auto 2fr 1.1fr auto;
+      gap: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-secondary);
+    }
+    .review-row {
+      display: grid;
+      grid-template-columns: auto 2fr 1.1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .review-user {
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .review-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .review-input {
+      border-radius: 10px;
+      border: 1px solid var(--color-input-border);
+      background: var(--color-input-bg);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .review-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.22);
+    }
+
+    #itemsContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 8px; /* spacing between added rows */
+    }
+
+    .btn-delete-item {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--color-text-secondary);
+      padding: 4px;
+      line-height: 1;
+    }
+    .btn-delete-item:hover { color: #DC2626; }
+
+    .btn-add-item {
+      margin-top: 8px;
+      border-radius: var(--radius-pill);
+      border: 1px dashed var(--color-border-subtle);
+      background: transparent;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-add-item:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: rgba(37, 99, 235, 0.04);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .btn-primary {
+      border: none;
+      outline: none;
+      border-radius: var(--radius-pill);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 36px rgba(37, 99, 235, 0.45);
+      background: #1D4ED8;
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+    }
+    .btn-ghost {
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-border-subtle);
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      background: transparent;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+    }
+
+    /* USER MODAL */
+    .user-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+    .user-modal-backdrop.is-open {
+      display: flex;
+    }
+    .user-modal {
+      width: 100%;
+      max-width: 420px;
+      background: var(--color-modal-bg);
+      border-radius: 18px;
+      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.55);
+      padding: 16px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .user-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .user-modal-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .user-modal-close {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      padding: 2px;
+      line-height: 1;
+    }
+    .user-modal-search {
+      margin-top: 2px;
+    }
+    .user-modal-search-input {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--color-input-border);
+      background: var(--color-input-bg);
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      outline: none;
+    }
+    .user-modal-search-input::placeholder {
+      color: var(--color-input-placeholder);
+    }
+    .user-modal-list {
+      margin-top: 6px;
+      max-height: 260px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-right: 2px;
+    }
+    .user-modal-item {
+      border-radius: 12px;
+      border: 1px solid transparent;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      background: transparent;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--color-text-primary);
+      text-align: left;
+    }
+    .user-modal-item-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .user-modal-item-name {
+      flex: 1 1 auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .user-modal-item:hover {
+      border-color: rgba(37, 99, 235, 0.45);
+      background: rgba(37, 99, 235, 0.06);
+    }
+    .user-modal-empty {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      padding: 8px 2px 2px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+      .header-inner {
+        height: 56px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+      }
+      .header-center { display: none; }
+      .icon-button--search { display: flex; }
+      .icon-button--bell { display: flex; }
+      .logo-text { display: none; }
+      .avatar-name { display: none; }
+      .main { padding-top: 24px; }
+      .page-title { font-size: 24px; }
+
+      .progress {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .progress-line {
+        width: 1px;
+        height: 18px;
+        align-self: center;
+      }
+
+      .review-header,
+      .review-row {
+        grid-template-columns: auto 1.9fr 1.1fr auto;
+        gap: 6px;
+      }
+      .review-input {
+        font-size: 12px;
+        padding: 7px 8px;
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+      }
+      .btn-primary,
+      .btn-ghost {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body class="theme-light">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <div class="logo-icon"></div>
+        <div class="logo-text">ServiceHub</div>
+      </div>
+
+      <div class="header-center">
+        <div class="search">
+          <div class="search-icon"></div>
+          <input class="search-input" type="text" placeholder="Search services…" />
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button class="icon-button icon-button--search" aria-label="Search">🔍</button>
+        <button class="icon-button icon-button--bell" aria-label="Notifications">🔔</button>
+        <div class="avatar-block">
+          <div class="avatar-circle">A</div>
+          <div class="avatar-name">Alex Johnson</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="container">
+      <section class="page-header">
+        <h1 class="page-title">Add day</h1>
+        <p class="page-subtitle">
+          Attach an image, pick a date and add notes for this day. It will appear in your calories list.
+        </p>
+      </section>
+
+      <section class="form-wrapper">
+        <!-- PROGRESS -->
+        <div class="progress">
+          <button class="progress-step progress-step--active" type="button" data-step="1">
+            <span class="progress-step-index">1</span>
+            <span>
+              <span class="progress-step-label-main">Calories creation</span>
+              <span class="progress-step-label-sub">Upload data for this day</span>
+            </span>
+          </button>
+
+          <div class="progress-line"></div>
+
+          <button class="progress-step" type="button" data-step="2">
+            <span class="progress-step-index">2</span>
+            <span>
+              <span class="progress-step-label-main">Result check</span>
+              <span class="progress-step-label-sub">Review items before saving</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="form-card">
+          <!-- STEP 1 -->
+          <div class="step" data-step="1">
+            <div>
+              <h2 class="step-section-title">New daily record</h2>
+              <p class="form-description">
+                Fill in the details below to analyze this day.
+              </p>
+            </div>
+
+            <form class="form-body" id="addDayForm">
+              <div class="field-group">
+                <label class="field-label" for="image">Image</label>
+                <span class="field-hint">Optional. Choose an image from your computer.</span>
+                <div class="file-input-wrapper">
+                  <input id="image" name="image" type="file" class="file-input" accept="image/*" />
+                  <div class="file-visual">
+                    <div class="file-icon">📷</div>
+                    <div>
+                      <div class="file-text-main">Click to choose image</div>
+                      <div class="file-text-sub">JPG, PNG or WEBP, up to 5 MB</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="date">Day</label>
+                <input id="date" name="date" type="date" class="field-input" placeholder="Select day" />
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="notes">Notes</label>
+                <span class="field-hint">Short description, meals, comments or anything you want to remember.</span>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  class="field-input"
+                  placeholder="For example: gym day, higher protein, dinner out with friends…"
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-ghost">Cancel</button>
+                <button type="button" class="btn-primary" id="primaryAction">Analyze</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step" data-step="2" style="display:none;">
+            <div class="review-section">
+              <h2 class="step-section-title">Result check</h2>
+              <p class="form-description">
+                Review detected items, adjust user, product names and grams if needed, then save the day.
+              </p>
+
+              <div class="review-items">
+                <div class="review-header">
+                  <span>User</span>
+                  <span>Product name</span>
+                  <span>Grams</span>
+                  <span></span>
+                </div>
+
+                <div class="review-row">
+                  <button type="button" class="review-user" data-user-name="Breakfast">
+                    <span class="review-avatar">B</span>
+                  </button>
+                  <input
+                    class="review-input"
+                    type="text"
+                    name="items[1][product]"
+                    value="Oatmeal with berries"
+                  />
+                  <input
+                    class="review-input"
+                    type="number"
+                    name="items[1][grams]"
+                    value="320"
+                    min="0"
+                  />
+                  <button type="button" class="btn-delete-item" aria-label="Delete item">✕</button>
+                  <input type="hidden" name="items[1][name]" value="Breakfast" />
+                </div>
+
+                <div class="review-row">
+                  <button type="button" class="review-user" data-user-name="Lunch">
+                    <span class="review-avatar">L</span>
+                  </button>
+                  <input
+                    class="review-input"
+                    type="text"
+                    name="items[2][product]"
+                    value="Chicken breast & rice"
+                  />
+                  <input
+                    class="review-input"
+                    type="number"
+                    name="items[2][grams]"
+                    value="280"
+                    min="0"
+                  />
+                  <button type="button" class="btn-delete-item" aria-label="Delete item">✕</button>
+                  <input type="hidden" name="items[2][name]" value="Lunch" />
+                </div>
+
+                <div class="review-row">
+                  <button type="button" class="review-user" data-user-name="Dinner">
+                    <span class="review-avatar">D</span>
+                  </button>
+                  <input
+                    class="review-input"
+                    type="text"
+                    name="items[3][product]"
+                    value="Salad & yogurt"
+                  />
+                  <input
+                    class="review-input"
+                    type="number"
+                    name="items[3][grams]"
+                    value="250"
+                    min="0"
+                  />
+                  <button type="button" class="btn-delete-item" aria-label="Delete item">✕</button>
+                  <input type="hidden" name="items[3][name]" value="Dinner" />
+                </div>
+
+                <div id="itemsContainer"></div>
+              </div>
+
+              <button type="button" class="btn-add-item" id="addItemBtn">
+                + Add one more item
+              </button>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-ghost" id="backToStep1">Back</button>
+              <button type="submit" form="addDayForm" class="btn-primary" id="saveButton">Save</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- USER PICKER MODAL -->
+  <div class="user-modal-backdrop" id="userModal">
+    <div class="user-modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
+      <div class="user-modal-header">
+        <h3 class="user-modal-title" id="userModalTitle">Select user</h3>
+        <button type="button" class="user-modal-close" id="userModalClose" aria-label="Close">✕</button>
+      </div>
+      <div class="user-modal-search">
+        <input
+          type="text"
+          class="user-modal-search-input"
+          id="userSearch"
+          placeholder="Search user…"
+        />
+      </div>
+      <div class="user-modal-list" id="userList"></div>
+      <div class="user-modal-empty" id="userEmpty" style="display:none;">
+        No users found.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      let currentStep = 1;
+      const steps = document.querySelectorAll('.step');
+      const progressSteps = document.querySelectorAll('.progress-step');
+      const primaryAction = document.getElementById('primaryAction');
+      const backToStep1 = document.getElementById('backToStep1');
+      const addItemBtn = document.getElementById('addItemBtn');
+      const itemsContainer = document.getElementById('itemsContainer');
+      let itemCounter = 4;
+
+      /* --------- STEP LOGIC --------- */
+      function setStep(step) {
+        currentStep = step;
+
+        steps.forEach(section => {
+          const s = Number(section.getAttribute('data-step'));
+          section.style.display = (s === step) ? 'block' : 'none';
+        });
+
+        progressSteps.forEach(btn => {
+          const s = Number(btn.getAttribute('data-step'));
+          btn.classList.toggle('progress-step--active', s === step);
+          btn.classList.toggle('progress-step--completed', s < step);
+        });
+
+        primaryAction.textContent = (step === 1) ? 'Analyze' : 'Save';
+      }
+
+      progressSteps.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const step = Number(btn.getAttribute('data-step'));
+          setStep(step);
+        });
+      });
+
+      primaryAction.addEventListener('click', (e) => {
+        if (currentStep === 1) {
+          e.preventDefault();
+          setStep(2);
+        } else {
+          document.getElementById('addDayForm').requestSubmit();
+        }
+      });
+
+      if (backToStep1) {
+        backToStep1.addEventListener('click', () => setStep(1));
+      }
+
+      /* --------- USER PICKER MODAL --------- */
+      const userModal = document.getElementById('userModal');
+      const userModalClose = document.getElementById('userModalClose');
+      const userSearch = document.getElementById('userSearch');
+      const userList = document.getElementById('userList');
+      const userEmpty = document.getElementById('userEmpty');
+
+      const users = [
+        { id: 1, name: 'Alex Johnson' },
+        { id: 2, name: 'Maria Garcia' },
+        { id: 3, name: 'John Smith' },
+        { id: 4, name: 'Emily Brown' },
+        { id: 5, name: 'Michael Chen' },
+        { id: 6, name: 'Sophia Lee' }
+      ];
+
+      let currentUserTarget = null; // { hiddenName, avatarEl, buttonEl }
+
+      function openUserModal(target) {
+        currentUserTarget = target;
+        userModal.classList.add('is-open');
+        userSearch.value = '';
+        renderUserList('');
+        userSearch.focus();
+      }
+
+      function closeUserModal() {
+        userModal.classList.remove('is-open');
+        currentUserTarget = null;
+      }
+
+      function getInitials(name) {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length === 0) return '?';
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+
+      function renderUserList(filter) {
+        userList.innerHTML = '';
+        const q = filter.trim().toLowerCase();
+        const filtered = users.filter(u => u.name.toLowerCase().includes(q));
+        userEmpty.style.display = filtered.length ? 'none' : 'block';
+
+        filtered.forEach(u => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'user-modal-item';
+          item.innerHTML = `
+            <span class="user-modal-item-avatar">${getInitials(u.name)}</span>
+            <span class="user-modal-item-name">${u.name}</span>
+          `;
+          item.addEventListener('click', () => {
+            if (!currentUserTarget) return;
+            const { hiddenName, avatarEl, buttonEl } = currentUserTarget;
+            hiddenName.value = u.name;
+            buttonEl.dataset.userName = u.name;
+            avatarEl.textContent = getInitials(u.name);
+            closeUserModal();
+          });
+          userList.appendChild(item);
+        });
+      }
+
+      userSearch.addEventListener('input', () => {
+        renderUserList(userSearch.value);
+      });
+
+      userModalClose.addEventListener('click', closeUserModal);
+
+      userModal.addEventListener('click', (e) => {
+        if (e.target === userModal) {
+          closeUserModal();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && userModal.classList.contains('is-open')) {
+          closeUserModal();
+        }
+      });
+
+      /* --------- ROW HANDLERS --------- */
+      function attachRowHandlers(row) {
+        const deleteBtn = row.querySelector('.btn-delete-item');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', () => {
+            row.remove();
+          });
+        }
+
+        const userBtn = row.querySelector('.review-user');
+        const hiddenName = row.querySelector('input[type="hidden"][name*="[name]"]');
+        const avatar = row.querySelector('.review-avatar');
+
+        if (userBtn && hiddenName && avatar) {
+          userBtn.addEventListener('click', () => {
+            openUserModal({ hiddenName, avatarEl: avatar, buttonEl: userBtn });
+          });
+        }
+      }
+
+      // initial rows
+      document.querySelectorAll('.review-row').forEach(attachRowHandlers);
+
+      // Add item
+      if (addItemBtn && itemsContainer) {
+        addItemBtn.addEventListener('click', () => {
+          const defaultName = `Item ${itemCounter}`;
+          const row = document.createElement('div');
+          row.className = 'review-row';
+          row.innerHTML = `
+            <button type="button" class="review-user" data-user-name="${defaultName}">
+              <span class="review-avatar">${String(itemCounter).slice(-1)}</span>
+            </button>
+            <input
+              class="review-input"
+              type="text"
+              name="items[${itemCounter}][product]"
+              placeholder="Product name"
+            />
+            <input
+              class="review-input"
+              type="number"
+              name="items[${itemCounter}][grams]"
+              placeholder="0"
+              min="0"
+            />
+            <button type="button" class="btn-delete-item" aria-label="Delete item">✕</button>
+            <input type="hidden" name="items[${itemCounter}][name]" value="${defaultName}" />
+          `;
+          itemsContainer.appendChild(row);
+          attachRowHandlers(row);
+          itemCounter++;
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

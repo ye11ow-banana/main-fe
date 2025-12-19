@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ServiceHub Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --color-primary: #2563EB;
+
+      --radius-lg: 24px;
+      --radius-pill: 9999px;
+
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
+
+      --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* THEMES */
+    body.theme-light {
+      --color-bg: #FFFFFF;       /* page background */
+      --color-header: #FFFFFF;   /* header bar */
+      --color-surface: #FFFFFF;  /* cards */
+      --color-border-subtle: #E5E7EB;
+      --color-text-primary: #111827;
+      --color-text-secondary: #6B7280;
+      --color-search-bg: #FFFFFF;
+      --color-search-placeholder: #9CA3AF;
+      --color-status-active-bg: #DCFCE7;
+      --color-status-active-text: #22C55E;
+      --color-status-inactive-bg: #E5E7EB;
+      --color-status-inactive-text: #6B7280;
+    }
+
+    body.theme-dark {
+      --color-bg: #020617;
+      --color-header: #020617;   /* header is same solid color (dark) */
+      --color-surface: #111827;
+      --color-border-subtle: #1F2937;
+      --color-text-primary: #F9FAFB;
+      --color-text-secondary: #9CA3AF;
+      --color-search-bg: #020617;
+      --color-search-placeholder: #6B7280;
+      --color-status-active-bg: rgba(34, 197, 94, 0.12);
+      --color-status-active-text: #4ADE80;
+      --color-status-inactive-bg: rgba(148, 163, 184, 0.25);
+      --color-status-inactive-text: #E5E7EB;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--color-bg); /* one solid background */
+      color: var(--color-text-primary);
+      font-family: var(--font-family);
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* FULL-WIDTH HEADER BAR */
+    .header {
+      width: 100%;
+      background: var(--color-header); /* flat white (light) or solid dark */
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .header-inner {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .header-left,
+    .header-center,
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-left {
+      flex: 0 0 auto;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--color-primary);
+    }
+
+    .logo-text {
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.01em;
+    }
+
+    .header-center {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+
+    .search {
+      max-width: 520px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-search-bg);
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-border-subtle);
+      padding: 8px 14px;
+    }
+
+    .search-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid var(--color-search-placeholder);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--color-search-placeholder);
+      right: -4px;
+      bottom: -1px;
+      transform: rotate(45deg);
+    }
+
+    .search-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--color-text-primary);
+    }
+
+    .search-input::placeholder {
+      color: var(--color-search-placeholder);
+    }
+
+    .header-right {
+      flex: 0 0 auto;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: 18px;
+    }
+
+    .avatar-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #38BDF8, #2563EB);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .avatar-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Search + bell visibility defaults (desktop) */
+    .icon-button--search {
+      display: none;      /* hidden on desktop */
+    }
+
+    .icon-button--bell {
+      display: flex;
+    }
+
+    /* MAIN CONTENT (below header) */
+    .main {
+      padding-top: 32px;
+      padding-bottom: 40px;
+    }
+
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      max-width: 480px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .service-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .service-thumbnail {
+      height: 110px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.35));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-thumbnail::before,
+    .service-thumbnail::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: radial-gradient(circle at center, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0));
+    }
+
+    .service-thumbnail::before {
+      width: 140px;
+      height: 140px;
+      top: -40px;
+      left: -20px;
+    }
+
+    .service-thumbnail::after {
+      width: 160px;
+      height: 160px;
+      bottom: -60px;
+      right: -40px;
+    }
+
+    .service-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .service-description {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .service-footer {
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-pill--active {
+      background-color: var(--color-status-active-bg);
+      color: var(--color-status-active-text);
+    }
+
+    .status-pill--inactive {
+      background-color: var(--color-status-inactive-bg);
+      color: var(--color-status-inactive-text);
+    }
+
+    .link-button {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-primary);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .link-button:hover {
+      text-decoration: underline;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 16px;
+      }
+
+      .header-inner {
+        height: 56px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        flex-wrap: nowrap;              /* keep ONE row */
+        justify-content: space-between; /* logo left, icons right */
+      }
+
+      /* Hide big search bar on mobile */
+      .header-center {
+        display: none;
+      }
+
+      /* Show compact search icon */
+      .icon-button--search {
+        display: flex;
+      }
+
+      /* Optional: keep bell visible */
+      .icon-button--bell {
+        display: flex;
+      }
+
+      /* NEW: hide logo text and avatar name on mobile */
+      .logo-text {
+        display: none;
+      }
+
+      .avatar-name {
+        display: none;
+      }
+
+      .main {
+        padding-top: 24px;
+      }
+
+      .services-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<!-- switch theme-light / theme-dark -->
+<body class="theme-dark">
+
+  <!-- FULL-WIDTH HEADER -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <div class="logo-icon"></div>
+        <div class="logo-text">ServiceHub</div>
+      </div>
+
+      <!-- Desktop search bar (hidden on mobile) -->
+      <div class="header-center">
+        <div class="search">
+          <div class="search-icon"></div>
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Search services…"
+          />
+        </div>
+      </div>
+
+      <!-- Right side: icons + avatar -->
+      <div class="header-right">
+        <!-- Search icon (mobile only) -->
+        <button class="icon-button icon-button--search" aria-label="Search">
+          🔍
+        </button>
+
+        <!-- Notifications icon -->
+        <button class="icon-button icon-button--bell" aria-label="Notifications">
+          🔔
+        </button>
+
+        <div class="avatar-block">
+          <div class="avatar-circle">A</div>
+          <div class="avatar-name">Alex Johnson</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT ON SOLID BACKGROUND -->
+  <main class="main">
+    <div class="container">
+      <section class="page-header">
+        <h1 class="page-title">Our Services</h1>
+        <p class="page-subtitle">
+          Manage and explore all available services in one place.
+        </p>
+      </section>
+
+      <section class="services-grid">
+        <article class="service-card">
+          <div class="service-thumbnail"></div>
+          <h2 class="service-title">Cloud Storage</h2>
+          <p class="service-description">
+            Securely store and access your files from anywhere with high availability.
+          </p>
+          <div class="service-footer">
+            <span class="status-pill status-pill--active">Active</span>
+            <a href="#" class="link-button">View details</a>
+          </div>
+        </article>
+
+        <article class="service-card">
+          <div class="service-thumbnail"></div>
+          <h2 class="service-title">Analytics Engine</h2>
+          <p class="service-description">
+            Turn raw data into insights with real-time dashboards and reports.
+          </p>
+          <div class="service-footer">
+            <span class="status-pill status-pill--active">Active</span>
+            <a href="#" class="link-button">View details</a>
+          </div>
+        </article>
+
+        <article class="service-card">
+          <div class="service-thumbnail"></div>
+          <h2 class="service-title">API Gateway</h2>
+          <p class="service-description">
+            Manage, monitor, and secure all your APIs in a single place.
+          </p>
+          <div class="service-footer">
+            <span class="status-pill status-pill--inactive">Inactive</span>
+            <a href="#" class="link-button">View details</a>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
