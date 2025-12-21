@@ -1,10 +1,19 @@
 import { useState } from "react";
 import "./SignIn.css";
-import { signIn } from "../../api/auth";
+import { getMe, signIn } from "../../api/auth";
 import { ApiError } from "../../api/http";
+import { parseApiError } from "../../api/errorParsing";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+type FieldErrors = Record<string, string>;
+
+function validate(values: { username: string; password: string }): {
+  fieldErrors: FieldErrors;
+  formError: string | null;
+} {
+  const fieldErrors: FieldErrors = {};
+  if (!values.username.trim()) fieldErrors.username = "Username or email is required";
+  if (!values.password) fieldErrors.password = "Password is required";
+  return { fieldErrors, formError: null };
 }
 
 export function SignIn() {
@@ -13,10 +22,18 @@ export function SignIn() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+
+    const local = validate({ username, password });
+    if (Object.keys(local.fieldErrors).length > 0) {
+      setFieldErrors(local.fieldErrors);
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -26,23 +43,19 @@ export function SignIn() {
       const authHeaderValue = `${res.data.token_type} ${res.data.access_token}`;
       localStorage.setItem("access_token", authHeaderValue);
 
-      // TODO: navigate to your protected page
-      // e.g. window.location.href = "/";
-
-      console.log("Signed in");
+      const me = await getMe();
+      if (me.data.is_verified) {
+        localStorage.removeItem("pending_email");
+        window.location.href = "/";
+      } else {
+        localStorage.setItem("pending_email", me.data.email);
+        window.location.href = "/verify-email";
+      }
     } catch (err) {
       if (err instanceof ApiError) {
-        let field: string | null = null;
-
-        const payload = err.payload;
-        if (isRecord(payload)) {
-          const errObj = payload["error"];
-          if (isRecord(errObj) && typeof errObj["field"] === "string") {
-            field = errObj["field"];
-          }
-        }
-
-        setError(field ? `${field}: ${err.message}` : err.message);
+        const parsed = parseApiError(err);
+        setError(parsed.formError);
+        setFieldErrors(parsed.fieldErrors);
       } else {
         setError("Unexpected error");
       }
@@ -86,6 +99,11 @@ export function SignIn() {
                   required
                 />
               </div>
+              {fieldErrors.username && (
+                <div style={{ fontSize: 12, color: "crimson" }}>
+                  {fieldErrors.username}
+                </div>
+              )}
             </div>
 
             <div className="field-group">
@@ -107,6 +125,12 @@ export function SignIn() {
                 />
               </div>
 
+              {fieldErrors.password && (
+                <div style={{ fontSize: 12, color: "crimson" }}>
+                  {fieldErrors.password}
+                </div>
+              )}
+
               <div className="field-row">
                 <a href="#" className="link-inline">
                   Forgot password?
@@ -121,7 +145,7 @@ export function SignIn() {
 
           <p className="auth-footer-text">
             Don’t have an account?{" "}
-            <a href="/signup" className="link-inline">
+            <a href="/sign-up" className="link-inline">
               Sign up
             </a>
           </p>

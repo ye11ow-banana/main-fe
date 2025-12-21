@@ -20,12 +20,14 @@ export async function http<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(options.headers ?? {}),
+  };
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
     ...options,
+    headers,
   });
 
   const text = await res.text();
