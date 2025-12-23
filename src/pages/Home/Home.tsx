@@ -1,4 +1,7 @@
+import { useEffect, useMemo, useState } from "react";
 import type { UserInfo } from "../../api/auth";
+import { getApps, type AppDTO } from "../../api/apps";
+import { ApiError } from "../../api/http";
 import "./Home.css";
 
 function initialFromName(name: string) {
@@ -7,6 +10,79 @@ function initialFromName(name: string) {
 }
 
 export function Home({ user }: { user: UserInfo }) {
+  const [apps, setApps] = useState<AppDTO[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const res = await getApps();
+        const list = Array.isArray(res.data) ? res.data : [res.data];
+        if (isMounted) setApps(list);
+      } catch (err) {
+        if (!isMounted) return;
+        if (err instanceof ApiError) setError(err.message);
+        else setError("Unexpected error");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const content = useMemo(() => {
+    if (isLoading) {
+      return <p style={{ fontSize: 13, opacity: 0.8 }}>Loading services…</p>;
+    }
+
+    if (error) {
+      return <p style={{ fontSize: 13, color: "crimson" }}>{error}</p>;
+    }
+
+    if (!apps || apps.length === 0) {
+      return <p style={{ fontSize: 13, opacity: 0.8 }}>No services available.</p>;
+    }
+
+    return (
+      <section className="services-grid">
+        {apps.map((app) => (
+          <article key={app.id} className="service-card">
+            <div
+              className="service-thumbnail"
+              style={app.image ? { backgroundImage: `url(${app.image})` } : undefined}
+            />
+            <h2 className="service-title">{app.name}</h2>
+            <p className="service-description">{app.description}</p>
+            <div className="service-footer">
+              <span
+                className={
+                  app.is_active
+                    ? "status-pill status-pill--active"
+                    : "status-pill status-pill--inactive"
+                }
+              >
+                {app.is_active ? "Active" : "Inactive"}
+              </span>
+              <a href="#" className="link-button">
+                View details
+              </a>
+            </div>
+          </article>
+        ))}
+      </section>
+    );
+  }, [apps, error, isLoading]);
+
   return (
     <div className="home-page theme-light">
       <header className="header">
@@ -48,49 +124,7 @@ export function Home({ user }: { user: UserInfo }) {
             </p>
           </section>
 
-          <section className="services-grid">
-            <article className="service-card">
-              <div className="service-thumbnail" />
-              <h2 className="service-title">Cloud Storage</h2>
-              <p className="service-description">
-                Securely store and access your files from anywhere with high availability.
-              </p>
-              <div className="service-footer">
-                <span className="status-pill status-pill--active">Active</span>
-                <a href="#" className="link-button">
-                  View details
-                </a>
-              </div>
-            </article>
-
-            <article className="service-card">
-              <div className="service-thumbnail" />
-              <h2 className="service-title">Analytics Engine</h2>
-              <p className="service-description">
-                Turn raw data into insights with real-time dashboards and reports.
-              </p>
-              <div className="service-footer">
-                <span className="status-pill status-pill--active">Active</span>
-                <a href="#" className="link-button">
-                  View details
-                </a>
-              </div>
-            </article>
-
-            <article className="service-card">
-              <div className="service-thumbnail" />
-              <h2 className="service-title">API Gateway</h2>
-              <p className="service-description">
-                Manage, monitor, and secure all your APIs in a single place.
-              </p>
-              <div className="service-footer">
-                <span className="status-pill status-pill--inactive">Inactive</span>
-                <a href="#" className="link-button">
-                  View details
-                </a>
-              </div>
-            </article>
-          </section>
+          {content}
         </div>
       </main>
     </div>
