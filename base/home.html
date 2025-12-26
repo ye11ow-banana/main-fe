@@ -36,6 +36,7 @@
       --color-status-active-text: #22C55E;
       --color-status-inactive-bg: #E5E7EB;
       --color-status-inactive-text: #6B7280;
+      --icon-bell: url("notification-icon-light.png");
     }
 
     body.theme-dark {
@@ -51,6 +52,7 @@
       --color-status-active-text: #4ADE80;
       --color-status-inactive-bg: rgba(148, 163, 184, 0.25);
       --color-status-inactive-text: #E5E7EB;
+      --icon-bell: url("notification-icon-dark.png");
     }
 
     * {
@@ -188,17 +190,12 @@
       gap: 10px;
     }
 
-    .avatar-circle {
+    .avatar-image {
       width: 32px;
       height: 32px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #38BDF8, #2563EB);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
+      object-fit: cover;
+      display: block;
     }
 
     .avatar-name {
@@ -214,6 +211,15 @@
 
     .icon-button--bell {
       display: flex;
+    }
+
+    .icon-bell {
+      width: 18px;
+      height: 18px;
+      background-image: var(--icon-bell);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 18px 18px;
     }
 
     /* MAIN CONTENT (below header) */
@@ -426,11 +432,11 @@
 
         <!-- Notifications icon -->
         <button class="icon-button icon-button--bell" aria-label="Notifications">
-          🔔
+          <span class="icon-bell" aria-hidden="true"></span>
         </button>
 
         <div class="avatar-block">
-          <div class="avatar-circle">A</div>
+          <img class="avatar-image" src="profile.webp" alt="Alex Johnson profile" loading="lazy" />
           <div class="avatar-name">Alex Johnson</div>
         </div>
       </div>

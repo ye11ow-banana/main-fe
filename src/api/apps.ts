@@ -1,5 +1,7 @@
 import { http } from "./http";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+
 type ResponseDTO<T> = {
   data: T | T[];
 };
@@ -12,6 +14,19 @@ export type AppDTO = {
   is_active: boolean;
   created_at: string;
 };
+
+export function resolveAppImageUrl(image: string): string {
+  const trimmed = image.trim();
+  if (!trimmed) return "";
+
+  // Absolute URL (http/https/data/blob) — keep as-is.
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) return trimmed;
+
+  // If API returns a relative path (e.g. "/media/x.png"), prefix API base URL.
+  if (trimmed.startsWith("/")) return `${API_BASE_URL}${trimmed}`;
+
+  return trimmed;
+}
 
 function getAuthHeader(): string | null {
   return localStorage.getItem("access_token");

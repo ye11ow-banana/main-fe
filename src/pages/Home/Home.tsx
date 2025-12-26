@@ -1,12 +1,30 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { UserInfo } from "../../api/auth";
-import { getApps, type AppDTO } from "../../api/apps";
+import { getApps, resolveAppImageUrl, type AppDTO } from "../../api/apps";
 import { ApiError } from "../../api/http";
 import "./Home.css";
 
 function initialFromName(name: string) {
   const trimmed = name.trim();
   return trimmed ? trimmed[0].toUpperCase() : "?";
+}
+
+function thumbnailStyle(image?: string | null): CSSProperties | undefined {
+  const raw = image?.trim();
+  if (!raw) return undefined;
+
+  const url = resolveAppImageUrl(raw);
+  if (!url) return undefined;
+
+  // Quote + encode to handle spaces and other special chars reliably.
+  const backgroundImage = `url("${encodeURI(url)}")`;
+
+  return {
+    backgroundImage,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  };
 }
 
 export function Home({ user }: { user: UserInfo }) {
@@ -57,10 +75,7 @@ export function Home({ user }: { user: UserInfo }) {
       <section className="services-grid">
         {apps.map((app) => (
           <article key={app.id} className="service-card">
-            <div
-              className="service-thumbnail"
-              style={app.image ? { backgroundImage: `url(${app.image})` } : undefined}
-            />
+            <div className="service-thumbnail" style={thumbnailStyle(app.image)} />
             <h2 className="service-title">{app.name}</h2>
             <p className="service-description">{app.description}</p>
             <div className="service-footer">
@@ -104,11 +119,16 @@ export function Home({ user }: { user: UserInfo }) {
               🔍
             </button>
             <button className="icon-button icon-button--bell" aria-label="Notifications">
-              🔔
+              <span className="icon-bell" aria-hidden="true" />
             </button>
 
             <div className="avatar-block">
-              <div className="avatar-circle">{initialFromName(user.username)}</div>
+              <img
+                className="avatar-image"
+                src="/profile.webp"
+                alt={`${user.username} profile`}
+                loading="lazy"
+              />
               <div className="avatar-name">{user.username}</div>
             </div>
           </div>

@@ -32,6 +32,7 @@
       --color-input-border: #E5E7EB;
       --color-input-placeholder: #9CA3AF;
       --color-chip-bg: rgba(37, 99, 235, 0.06); /* soft blue tint */
+      --icon-bell: url("notification-icon-light.png");
     }
 
     body.theme-dark {
@@ -45,6 +46,7 @@
       --color-input-border: #1F2937;
       --color-input-placeholder: #6B7280;
       --color-chip-bg: rgba(37, 99, 235, 0.22); /* same blue, darker */
+      --icon-bell: url("notification-icon-dark.png");
     }
 
     * {
@@ -182,17 +184,12 @@
       gap: 10px;
     }
 
-    .avatar-circle {
+    .avatar-image {
       width: 32px;
       height: 32px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #38BDF8, #2563EB);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
+      object-fit: cover;
+      display: block;
     }
 
     .avatar-name {
@@ -207,6 +204,15 @@
 
     .icon-button--bell {
       display: flex;
+    }
+
+    .icon-bell {
+      width: 18px;
+      height: 18px;
+      background-image: var(--icon-bell);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 18px 18px;
     }
 
     /* MAIN LAYOUT */
@@ -782,11 +788,11 @@
         </button>
 
         <button class="icon-button icon-button--bell" aria-label="Notifications">
-          🔔
+          <span class="icon-bell" aria-hidden="true"></span>
         </button>
 
         <div class="avatar-block">
-          <div class="avatar-circle">A</div>
+          <img class="avatar-image" src="profile.webp" alt="Alex Johnson profile" loading="lazy" />
           <div class="avatar-name">Alex Johnson</div>
         </div>
       </div>

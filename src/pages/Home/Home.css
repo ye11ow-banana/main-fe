@@ -21,6 +21,7 @@
   --color-status-active-text: #22c55e;
   --color-status-inactive-bg: #e5e7eb;
   --color-status-inactive-text: #6b7280;
+  --icon-bell: url("/notification-icon-light.png");
 }
 
 .home-page.theme-dark {
@@ -36,6 +37,7 @@
   --color-status-active-text: #4ade80;
   --color-status-inactive-bg: rgba(148, 163, 184, 0.25);
   --color-status-inactive-text: #e5e7eb;
+  --icon-bell: url("/notification-icon-dark.png");
 }
 
 * {
@@ -172,17 +174,12 @@
   gap: 10px;
 }
 
-.avatar-circle {
+.avatar-image {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
+  object-fit: cover;
+  display: block;
 }
 
 .avatar-name {
@@ -197,6 +194,15 @@
 
 .icon-button--bell {
   display: flex;
+}
+
+.icon-bell {
+  width: 18px;
+  height: 18px;
+  background-image: var(--icon-bell);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px 18px;
 }
 
 .main {
