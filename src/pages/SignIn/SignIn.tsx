@@ -42,6 +42,7 @@ export function SignIn() {
       // Store "bearer <token>" (matches token_type from backend)
       const authHeaderValue = `${res.data.token_type} ${res.data.access_token}`;
       localStorage.setItem("access_token", authHeaderValue);
+      localStorage.setItem("refresh_token", res.data.refresh_token);
 
       const me = await getMe();
       if (me.data.is_verified) {

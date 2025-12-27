@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { authHttp, http } from "./http";
 
 type ResponseDTO<T> = {
   data: T;
@@ -13,11 +13,25 @@ export type SignInResponse = {
   data: {
     access_token: string;
     token_type: string; // e.g. "bearer"
+    refresh_token: string;
   };
 };
 
 export function signIn(body: SignInRequest) {
   return http<SignInResponse>("/auth/sign-in", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export type RefreshTokenRequest = {
+  refresh_token: string;
+};
+
+export type RefreshTokenResponse = SignInResponse;
+
+export function refreshToken(body: RefreshTokenRequest) {
+  return http<RefreshTokenResponse>("/auth/refresh-token", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -39,10 +53,8 @@ export type UserInfo = {
 };
 
 export function getMe() {
-  const auth = getAuthHeader();
-  return http<ResponseDTO<UserInfo>>("/auth/me", {
+  return authHttp<ResponseDTO<UserInfo>>("/auth/me", {
     method: "GET",
-    headers: auth ? { Authorization: auth } : {},
   });
 }
 
@@ -53,23 +65,15 @@ export function signUp(body: SignUpRequest) {
   });
 }
 
-function getAuthHeader(): string | null {
-  return localStorage.getItem("access_token");
-}
-
 export function sendEmailVerificationCode() {
-  const auth = getAuthHeader();
-  return http<ResponseDTO<{ success?: boolean }>>("/auth/email/verification-code", {
+  return authHttp<ResponseDTO<{ success?: boolean }>>("/auth/email/verification-code", {
     method: "POST",
-    headers: auth ? { Authorization: auth } : {},
   });
 }
 
 export function verifyEmail(body: { code: number }) {
-  const auth = getAuthHeader();
-  return http<ResponseDTO<{ success?: boolean }>>("/auth/email/verify", {
+  return authHttp<ResponseDTO<{ success?: boolean }>>("/auth/email/verify", {
     method: "POST",
-    headers: auth ? { Authorization: auth } : {},
     body: JSON.stringify(body),
   });
 }

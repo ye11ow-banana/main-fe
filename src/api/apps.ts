@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { authHttp } from "./http";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -28,14 +28,8 @@ export function resolveAppImageUrl(image: string): string {
   return trimmed;
 }
 
-function getAuthHeader(): string | null {
-  return localStorage.getItem("access_token");
-}
-
 export function getApps() {
-  const auth = getAuthHeader();
-  return http<ResponseDTO<AppDTO>>("/apps", {
+  return authHttp<ResponseDTO<AppDTO>>("/apps", {
     method: "GET",
-    headers: auth ? { Authorization: auth } : {},
   });
 }

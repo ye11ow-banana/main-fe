@@ -193,6 +193,37 @@ export function CaloriesList({ user }: { user: UserInfo }) {
     };
   }, [items, sortBy, trendType]);
 
+  function updateHoverFromPointer(clientX: number, clientY: number) {
+    if (!chart.hasData || chart.pts.length === 0) return;
+    const svg = chartSvgRef.current;
+    if (!svg) return;
+
+    svg.classList.add("chart-hover");
+
+    const box = svg.getBoundingClientRect();
+    const relX = clamp(clientX - box.left, 0, box.width);
+    const xSvg = (relX / box.width) * chart.W;
+
+    let best = 0;
+    let bestDist = Infinity;
+    chart.pts.forEach((p, i) => {
+      const dist = Math.abs(p.x - xSvg);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+
+    setHoverIndex(best);
+    const tip = chartTipRef.current;
+    if (tip) {
+      const x = clamp(clientX - box.left + 12, 12, box.width - 150);
+      const y = clamp(clientY - box.top - 50, 8, box.height - 70);
+      tip.style.left = `${x}px`;
+      tip.style.top = `${y}px`;
+    }
+  }
+
   return (
     <div className="calories-page theme-light">
       <header className="header">
@@ -305,7 +336,19 @@ export function CaloriesList({ user }: { user: UserInfo }) {
             </div>
 
             <div className="chart-card">
-              <div className="chart-inner">
+              <div
+                className="chart-inner"
+                onPointerMove={(e) => updateHoverFromPointer(e.clientX, e.clientY)}
+                onPointerLeave={() => {
+                  const svg = chartSvgRef.current;
+                  if (svg) svg.classList.remove("chart-hover");
+                  setHoverIndex(null);
+                }}
+                onPointerDown={(e) => {
+                  // tap shows tooltip
+                  updateHoverFromPointer(e.clientX, e.clientY);
+                }}
+              >
                 <svg
                   ref={chartSvgRef}
                   className="chart-svg"
@@ -313,70 +356,6 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                   preserveAspectRatio="xMidYMid meet"
                   role="img"
                   aria-label={chart.ariaLabel}
-                  onPointerMove={(e) => {
-                    if (!chart.hasData || chart.pts.length === 0) return;
-                    const svg = chartSvgRef.current;
-                    if (!svg) return;
-                    svg.classList.add("chart-hover");
-
-                    const box = svg.getBoundingClientRect();
-                    const relX = e.clientX - box.left;
-                    const xSvg = (relX / box.width) * chart.W;
-
-                    let best = 0;
-                    let bestDist = Infinity;
-                    chart.pts.forEach((p, i) => {
-                      const dist = Math.abs(p.x - xSvg);
-                      if (dist < bestDist) {
-                        bestDist = dist;
-                        best = i;
-                      }
-                    });
-
-                    setHoverIndex(best);
-                    const tip = chartTipRef.current;
-                    if (tip) {
-                      const x = clamp(e.clientX - box.left + 12, 12, box.width - 150);
-                      const y = clamp(e.clientY - box.top - 50, 8, box.height - 70);
-                      tip.style.left = `${x}px`;
-                      tip.style.top = `${y}px`;
-                    }
-                  }}
-                  onPointerLeave={() => {
-                    const svg = chartSvgRef.current;
-                    if (svg) svg.classList.remove("chart-hover");
-                    setHoverIndex(null);
-                  }}
-                  onPointerDown={(e) => {
-                    // tap shows tooltip
-                    const svg = chartSvgRef.current;
-                    if (!chart.hasData || chart.pts.length === 0 || !svg) return;
-                    svg.setPointerCapture(e.pointerId);
-                    svg.classList.add("chart-hover");
-
-                    const box = svg.getBoundingClientRect();
-                    const relX = e.clientX - box.left;
-                    const xSvg = (relX / box.width) * chart.W;
-
-                    let best = 0;
-                    let bestDist = Infinity;
-                    chart.pts.forEach((p, i) => {
-                      const dist = Math.abs(p.x - xSvg);
-                      if (dist < bestDist) {
-                        bestDist = dist;
-                        best = i;
-                      }
-                    });
-
-                    setHoverIndex(best);
-                    const tip = chartTipRef.current;
-                    if (tip) {
-                      const x = clamp(e.clientX - box.left + 12, 12, box.width - 150);
-                      const y = clamp(e.clientY - box.top - 50, 8, box.height - 70);
-                      tip.style.left = `${x}px`;
-                      tip.style.top = `${y}px`;
-                    }
-                  }}
                 >
                   {!isLoading && !error && !chart.hasData && (
                     <text x="50%" y="50%" textAnchor="middle" className="chart-axis-text">

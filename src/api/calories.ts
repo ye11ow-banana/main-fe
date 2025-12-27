@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { authHttp } from "./http";
 
 type ResponseDTO<T> = {
   data: T;
@@ -17,24 +17,17 @@ export type TrendItemsParams = {
   type: TrendType;
 };
 
-function getAuthHeader(): string | null {
-  return localStorage.getItem("access_token");
-}
-
 // Backend: ../main-be FastAPI
 // GET /calorie/trend/items — endpoint used for the calories/weight graph.
 export function getCalorieTrendItems(params: TrendItemsParams) {
-  const auth = getAuthHeader();
-
   const query = new URLSearchParams({
     start_date: params.start_date,
     end_date: params.end_date,
     type: params.type,
   });
 
-  return http<ResponseDTO<TrendItem[]>>(`/calorie/trend/items?${query.toString()}`,
+  return authHttp<ResponseDTO<TrendItem[]>>(`/calorie/trend/items?${query.toString()}`,
   {
     method: "GET",
-    headers: auth ? { Authorization: auth } : {},
   });
 }
