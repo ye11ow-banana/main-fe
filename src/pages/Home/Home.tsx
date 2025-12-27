@@ -4,11 +4,6 @@ import { getApps, resolveAppImageUrl, type AppDTO } from "../../api/apps";
 import { ApiError } from "../../api/http";
 import "./Home.css";
 
-function initialFromName(name: string) {
-  const trimmed = name.trim();
-  return trimmed ? trimmed[0].toUpperCase() : "?";
-}
-
 function thumbnailStyle(image?: string | null): CSSProperties | undefined {
   const raw = image?.trim();
   if (!raw) return undefined;
@@ -88,7 +83,17 @@ export function Home({ user }: { user: UserInfo }) {
               >
                 {app.is_active ? "Active" : "Inactive"}
               </span>
-              <a href="#" className="link-button">
+              <a
+                href={
+                  app.id === "972fe6d8-e15c-44b0-ade4-2ceafa16789d" ? "/calories" : "#"
+                }
+                className="link-button"
+                onClick={(e) => {
+                  if (app.id !== "972fe6d8-e15c-44b0-ade4-2ceafa16789d") {
+                    e.preventDefault();
+                  }
+                }}
+              >
                 View details
               </a>
             </div>

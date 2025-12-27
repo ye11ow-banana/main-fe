@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ApiError } from "./api/http";
 import { getMe, type UserInfo } from "./api/auth";
 import { Home } from "./pages/Home/Home";
+import { CaloriesList } from "./pages/CaloriesList/CaloriesList";
 import { SignIn } from "./pages/SignIn/SignIn";
 import { SignUp } from "./pages/SignUp/SignUp";
 import { VerifyEmail } from "./pages/VerifyEmail/VerifyEmail";
@@ -106,6 +107,10 @@ export default function App() {
 
   // Default signed-in route
   if (pathname === "/") return <Home user={auth.user} />;
+
+  if (pathname === "/calories" || pathname === "/calories-list") {
+    return <CaloriesList user={auth.user} />;
+  }
 
   // Future pages will be added here; for now route unknown paths to home.
   return redirect("/");
