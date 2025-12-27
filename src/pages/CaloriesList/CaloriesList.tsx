@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { UserInfo } from "../../api/auth";
 import { ApiError } from "../../api/http";
 import { getCalorieTrendItems, type TrendItem, type TrendType } from "../../api/calories";
@@ -27,6 +27,25 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
+function formatShortDate(isoDate: string): string {
+  // Expect YYYY-MM-DD; fall back to raw string if unexpected.
+  const m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(isoDate);
+  if (!m) return isoDate;
+
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(y, mo - 1, d);
+
+  // Use a compact, readable label like “Aug 24”.
+  return dt.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function formatValue(value: number, type: TrendType): string {
+  if (type === "calorie") return `${Math.round(value)} kcal`;
+  return `${value.toFixed(1)} kg`;
+}
+
 export function CaloriesList({ user }: { user: UserInfo }) {
   const defaultEnd = useMemo(() => toDateInputValue(new Date()), []);
   const defaultStart = useMemo(() => toDateInputValue(addDays(new Date(), -30)), []);
@@ -34,6 +53,11 @@ export function CaloriesList({ user }: { user: UserInfo }) {
   const [trendType, setTrendType] = useState<TrendType>("weight");
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
+  const [sortBy, setSortBy] = useState<"recent" | "oldest">("recent");
+
+  const chartSvgRef = useRef<SVGSVGElement | null>(null);
+  const chartTipRef = useRef<HTMLDivElement | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,49 +97,101 @@ export function CaloriesList({ user }: { user: UserInfo }) {
     const raw = items ?? [];
     const normalized = raw
       .filter((it) => typeof it?.date === "string")
-      .map((it) => ({ date: it.date, value: toNumber(it.value) }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .map((it) => ({ date: it.date, value: toNumber(it.value) }));
 
-    // Template uses a static clip-path polygon; we keep the same element but drive
-    // the polygon points from API data so it still looks identical.
-    if (normalized.length === 0) {
+    normalized.sort((a, b) => {
+      const cmp = a.date.localeCompare(b.date);
+      return sortBy === "oldest" ? cmp : -cmp;
+    });
+
+    // SVG layout (matches base/calories-list.html viewBox)
+    const W = 640;
+    const H = 220;
+    const padL = 56;
+    const padR = 20;
+    const padT = 16;
+    const padB = 40;
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+
+    const metricLabel = trendType === "weight" ? "Weight, kg" : "Calories, kcal";
+    const ariaLabel = trendType === "weight" ? "Weight over time" : "Calories over time";
+
+    if (normalized.length < 2) {
       return {
         hasData: false,
-        clipPath:
-          "polygon(0% 70%, 12% 50%, 25% 60%, 38% 40%, 52% 45%, 65% 30%, 80% 35%, 100% 20%, 100% 100%, 0% 100%)",
+        W,
+        H,
+        padL,
+        padR,
+        padT,
+        padB,
+        innerW,
+        innerH,
+        metricLabel,
+        ariaLabel,
+        series: normalized,
+        pts: [] as Array<{ x: number; y: number; date: string; value: number }>,
+        lineD: "",
+        areaD: "",
+        yTicks: [] as Array<{ v: number; y: number }>,
+        xLabels: [] as Array<{ x: number; text: string }>,
       };
     }
 
-    const values = normalized.map((p) => p.value);
-    const minV = Math.min(...values);
-    const maxV = Math.max(...values);
+    // Chart should read left->right time (oldest->newest)
+    const series = sortBy === "recent" ? [...normalized].reverse() : normalized;
 
-    const range = maxV - minV;
-    const yMin = range === 0 ? minV - 1 : minV;
-    const yMax = range === 0 ? maxV + 1 : maxV;
+    const vals = series.map((d) => d.value);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const span = max - min || 1;
+    const yMin = min - span * 0.15;
+    const yMax = max + span * 0.15;
 
-    const topPadPct = 10; // keep a little headroom like the template shape
-    const bottomPadPct = 18;
+    const xAt = (i: number) => padL + innerW * (i / (series.length - 1 || 1));
+    const yAt = (v: number) => padT + innerH * (1 - (v - yMin) / (yMax - yMin));
 
-    const n = normalized.length;
-    const points = normalized.map((p, i) => {
-      const x = n === 1 ? 50 : (i / (n - 1)) * 100;
-      const t = yMax === yMin ? 0.5 : (p.value - yMin) / (yMax - yMin);
-      const y =
-        topPadPct +
-        (1 - clamp(t, 0, 1)) * (100 - topPadPct - bottomPadPct);
-      return { x, y };
+    const pts = series.map((d, i) => ({ x: xAt(i), y: yAt(d.value), date: d.date, value: d.value }));
+
+    const lineD = pts
+      .map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+      .join(" ");
+    const areaD = `M ${padL} ${padT + innerH} ${lineD.replace(/^M/, "L")} L ${padL + innerW} ${padT + innerH} Z`;
+
+    const ticks = 4;
+    const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
+      const v = yMin + (i * (yMax - yMin)) / ticks;
+      return { v, y: yAt(v) };
     });
 
-    // Close the polygon to bottom edge like the template.
-    const polygon = [
-      ...points.map((p) => `${p.x.toFixed(2)}% ${p.y.toFixed(2)}%`),
-      "100% 100%",
-      "0% 100%",
-    ].join(", ");
+    const mid = Math.floor((series.length - 1) / 2);
+    const xLabels = [
+      { x: xAt(0), text: formatShortDate(series[0].date) },
+      { x: xAt(mid), text: formatShortDate(series[mid].date) },
+      { x: xAt(series.length - 1), text: formatShortDate(series[series.length - 1].date) },
+    ];
 
-    return { hasData: true, clipPath: `polygon(${polygon})` };
-  }, [items]);
+    return {
+      hasData: true,
+      W,
+      H,
+      padL,
+      padR,
+      padT,
+      padB,
+      innerW,
+      innerH,
+      metricLabel,
+      ariaLabel,
+      series,
+      pts,
+      lineD,
+      areaD,
+      yTicks,
+      xLabels,
+    };
+  }, [items, sortBy, trendType]);
 
   return (
     <div className="calories-page theme-light">
@@ -215,11 +291,14 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                   <label className="filter-label" htmlFor="sort">
                     Sort by
                   </label>
-                  <select id="sort" className="filter-select">
-                    <option>Most recent</option>
-                    <option>Oldest</option>
-                    <option>Most calories</option>
-                    <option>Lowest weight</option>
+                  <select
+                    id="sort"
+                    className="filter-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as "recent" | "oldest")}
+                  >
+                    <option value="recent">Most recent</option>
+                    <option value="oldest">Oldest</option>
                   </select>
                 </div>
               </div>
@@ -227,23 +306,173 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
             <div className="chart-card">
               <div className="chart-inner">
-                <div className="chart-grid-lines"></div>
-                <div className="chart-line" style={{ clipPath: chart.clipPath }} />
+                <svg
+                  ref={chartSvgRef}
+                  className="chart-svg"
+                  viewBox={`${0} ${0} ${chart.W} ${chart.H}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  role="img"
+                  aria-label={chart.ariaLabel}
+                  onPointerMove={(e) => {
+                    if (!chart.hasData || chart.pts.length === 0) return;
+                    const svg = chartSvgRef.current;
+                    if (!svg) return;
+                    svg.classList.add("chart-hover");
+
+                    const box = svg.getBoundingClientRect();
+                    const relX = e.clientX - box.left;
+                    const xSvg = (relX / box.width) * chart.W;
+
+                    let best = 0;
+                    let bestDist = Infinity;
+                    chart.pts.forEach((p, i) => {
+                      const dist = Math.abs(p.x - xSvg);
+                      if (dist < bestDist) {
+                        bestDist = dist;
+                        best = i;
+                      }
+                    });
+
+                    setHoverIndex(best);
+                    const tip = chartTipRef.current;
+                    if (tip) {
+                      const x = clamp(e.clientX - box.left + 12, 12, box.width - 150);
+                      const y = clamp(e.clientY - box.top - 50, 8, box.height - 70);
+                      tip.style.left = `${x}px`;
+                      tip.style.top = `${y}px`;
+                    }
+                  }}
+                  onPointerLeave={() => {
+                    const svg = chartSvgRef.current;
+                    if (svg) svg.classList.remove("chart-hover");
+                    setHoverIndex(null);
+                  }}
+                  onPointerDown={(e) => {
+                    // tap shows tooltip
+                    const svg = chartSvgRef.current;
+                    if (!chart.hasData || chart.pts.length === 0 || !svg) return;
+                    svg.setPointerCapture(e.pointerId);
+                    svg.classList.add("chart-hover");
+
+                    const box = svg.getBoundingClientRect();
+                    const relX = e.clientX - box.left;
+                    const xSvg = (relX / box.width) * chart.W;
+
+                    let best = 0;
+                    let bestDist = Infinity;
+                    chart.pts.forEach((p, i) => {
+                      const dist = Math.abs(p.x - xSvg);
+                      if (dist < bestDist) {
+                        bestDist = dist;
+                        best = i;
+                      }
+                    });
+
+                    setHoverIndex(best);
+                    const tip = chartTipRef.current;
+                    if (tip) {
+                      const x = clamp(e.clientX - box.left + 12, 12, box.width - 150);
+                      const y = clamp(e.clientY - box.top - 50, 8, box.height - 70);
+                      tip.style.left = `${x}px`;
+                      tip.style.top = `${y}px`;
+                    }
+                  }}
+                >
+                  {!isLoading && !error && !chart.hasData && (
+                    <text x="50%" y="50%" textAnchor="middle" className="chart-axis-text">
+                      Not enough data to plot
+                    </text>
+                  )}
+
+                  {!isLoading && !error && chart.hasData && (
+                    <>
+                      <g className="chart-grid">
+                        {chart.yTicks.map((t, idx) => (
+                          <line
+                            key={idx}
+                            x1={chart.padL}
+                            y1={t.y}
+                            x2={chart.padL + chart.innerW}
+                            y2={t.y}
+                          />
+                        ))}
+                      </g>
+
+                      <g className="chart-axes">
+                        <line x1={chart.padL} y1={chart.padT} x2={chart.padL} y2={chart.padT + chart.innerH} />
+                        <line
+                          x1={chart.padL}
+                          y1={chart.padT + chart.innerH}
+                          x2={chart.padL + chart.innerW}
+                          y2={chart.padT + chart.innerH}
+                        />
+                      </g>
+
+                      <g className="chart-ylabels">
+                        {chart.yTicks.map((t, idx) => (
+                          <text
+                            key={idx}
+                            className="chart-axis-text"
+                            x={chart.padL - 10}
+                            y={t.y + 4}
+                            textAnchor="end"
+                          >
+                            {trendType === "weight" ? t.v.toFixed(1) : Math.round(t.v)}
+                          </text>
+                        ))}
+                      </g>
+
+                      <path className="chart-area" d={chart.areaD} />
+                      <path className="chart-line" d={chart.lineD} />
+
+                      <g className="chart-points">
+                        {chart.pts.map((p, idx) => (
+                          <circle key={p.date} className="chart-point" cx={p.x} cy={p.y} r={5} data-i={idx} />
+                        ))}
+                      </g>
+
+                      <g className="chart-xlabels">
+                        {chart.xLabels.map((xl, idx) => (
+                          <text
+                            key={idx}
+                            className="chart-axis-text"
+                            x={xl.x}
+                            y={chart.padT + chart.innerH + 26}
+                            textAnchor="middle"
+                          >
+                            {xl.text}
+                          </text>
+                        ))}
+                      </g>
+                    </>
+                  )}
+                </svg>
+
+                <div
+                  ref={chartTipRef}
+                  className="chart-tip"
+                  hidden={hoverIndex == null || !chart.hasData}
+                >
+                  {hoverIndex != null && chart.hasData && (
+                    <>
+                      <strong>{formatShortDate(chart.series[hoverIndex]?.date ?? "")}</strong>
+                      <br />
+                      {formatValue(chart.series[hoverIndex]?.value ?? 0, trendType)}
+                    </>
+                  )}
+                </div>
 
                 <div className="chart-overlay" aria-live="polite">
                   {isLoading && <span className="chart-overlay__text">Loading trend data…</span>}
                   {!isLoading && error && (
                     <span className="chart-overlay__text chart-overlay__text--error">{error}</span>
                   )}
-                  {!isLoading && !error && !chart.hasData && (
-                    <span className="chart-overlay__text">No trend data for this range.</span>
-                  )}
                 </div>
               </div>
               <div className="chart-footer">
                 <div className="chart-axis-label">
                   <span className="chart-dot"></span>
-                  <span>Daily trend</span>
+                  <span>{chart.metricLabel}</span>
                 </div>
                 <span>Date →</span>
               </div>

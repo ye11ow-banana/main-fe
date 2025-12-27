@@ -1,1101 +1,631 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>ServiceHub – Calories</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Inter font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calories & Weight</title>
 
   <style>
-    :root {
-      --color-primary: #2563EB;
-      --radius-lg: 24px;
-      --radius-md: 16px;
-      --radius-pill: 9999px;
-      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
-      --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    :root{
+      --color-bg: #ffffff;
+      --color-surface: #ffffff;
+      --color-surface-2: #f7f9fc;
+      --color-border-subtle: rgba(15, 23, 42, 0.10);
+      --color-text-primary: #0f172a;
+      --color-text-secondary: #64748b;
+      --color-point: #2563eb;
+
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    /* THEMES */
-    body.theme-light {
-      --color-bg: #FFFFFF;
-      --color-header: #FFFFFF;
-      --color-surface: #FFFFFF;
-      --color-border-subtle: #E5E7EB;
-      --color-text-primary: #111827;
-      --color-text-secondary: #6B7280;
-      --color-input-bg: #F9FAFB;
-      --color-input-border: #E5E7EB;
-      --color-input-placeholder: #9CA3AF;
-      --color-chip-bg: rgba(37, 99, 235, 0.06); /* soft blue tint */
-      --icon-bell: url("notification-icon-light.png");
-    }
-
-    body.theme-dark {
-      --color-bg: #020617;
-      --color-header: #020617;
-      --color-surface: #111827;
-      --color-border-subtle: #1F2937;
-      --color-text-primary: #F9FAFB;
-      --color-text-secondary: #9CA3AF;
-      --color-input-bg: #020617;
-      --color-input-border: #1F2937;
-      --color-input-placeholder: #6B7280;
-      --color-chip-bg: rgba(37, 99, 235, 0.22); /* same blue, darker */
-      --icon-bell: url("notification-icon-dark.png");
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
+    * { box-sizing: border-box; }
+    body{
       margin: 0;
-      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--color-text-primary);
       background: var(--color-bg);
-      color: var(--color-text-primary);
-      font-family: var(--font-family);
     }
 
-    .container {
-      max-width: 1120px;
+    .wrap{
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 0 24px;
+      padding: 28px 22px 40px;
     }
 
-    /* FULL-WIDTH HEADER BAR (same as home) */
-    .header {
-      width: 100%;
-      background: var(--color-header);
-      border-bottom: 1px solid var(--color-border-subtle);
+    h1{
+      margin: 0 0 8px;
+      font-size: 40px;
+      letter-spacing: -0.02em;
     }
-
-    .header-inner {
-      height: 72px;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .header-left,
-    .header-center,
-    .header-right {
-      display: flex;
-      align-items: center;
-    }
-
-    .header-left {
-      flex: 0 0 auto;
-      gap: 8px;
-    }
-
-    .logo-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: var(--color-primary);
-    }
-
-    .logo-text {
-      font-weight: 600;
-      font-size: 18px;
-      letter-spacing: 0.01em;
-    }
-
-    .header-center {
-      flex: 1 1 auto;
-      justify-content: center;
-    }
-
-    .search {
-      max-width: 520px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--color-header);
-      border-radius: var(--radius-pill);
-      border: 1px solid var(--color-border-subtle);
-      padding: 8px 14px;
-    }
-
-    .search-icon {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 2px solid var(--color-input-placeholder);
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .search-icon::after {
-      content: "";
-      position: absolute;
-      width: 8px;
-      height: 2px;
-      border-radius: 999px;
-      background: var(--color-input-placeholder);
-      right: -4px;
-      bottom: -1px;
-      transform: rotate(45deg);
-    }
-
-    .search-input {
-      border: none;
-      outline: none;
-      background: transparent;
-      width: 100%;
-      font-family: inherit;
-      font-size: 14px;
-      color: var(--color-text-primary);
-    }
-
-    .search-input::placeholder {
-      color: var(--color-input-placeholder);
-    }
-
-    .header-right {
-      flex: 0 0 auto;
-      gap: 12px;
-      margin-left: auto;
-    }
-
-    .icon-button {
-      width: 36px;
-      height: 36px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      background: transparent;
+    .sub{
+      margin: 0 0 26px;
       color: var(--color-text-secondary);
-      font-size: 18px;
+      font-size: 16px;
     }
 
-    .avatar-block {
+    .row{
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Tabs */
+    .tabs{
+      display: inline-flex;
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      box-shadow: var(--shadow-sm);
+      gap: 6px;
+    }
+    .tab{
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tab--active{
+      background: var(--color-surface-2);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    /* Filters */
+    .filters{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .field{
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .ctrl{
+      display: inline-flex;
       align-items: center;
       gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      min-height: 42px;
+    }
+    .ctrl input{
+      border: 0;
+      outline: 0;
+      font: inherit;
+      width: 120px;
+      color: var(--color-text-primary);
+      background: transparent;
+    }
+    .ctrl select{
+      border: 0;
+      outline: 0;
+      font: inherit;
+      color: var(--color-text-primary);
+      background: transparent;
+      cursor: pointer;
+    }
+    .dash{ color: var(--color-text-secondary); }
+
+    /* Card */
+    .card{
+      margin-top: 16px;
+      border-radius: 28px;
+      border: 1px solid var(--color-border-subtle);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: var(--shadow-sm);
+      padding: 18px 18px 12px;
     }
 
-    .avatar-image {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      object-fit: cover;
+    .chart-card{
+      border-radius: 22px;
+      border: 1px solid var(--color-border-subtle);
+      background: rgba(255,255,255,0.65);
+      padding: 14px 14px 10px;
+      overflow: hidden;
+    }
+
+    .chart-inner{ position: relative; }
+    .chart-svg{
+      width: 100%;
+      height: 240px;
       display: block;
     }
 
-    .avatar-name {
-      font-size: 14px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .icon-button--search {
-      display: none;
-    }
-
-    .icon-button--bell {
-      display: flex;
-    }
-
-    .icon-bell {
-      width: 18px;
-      height: 18px;
-      background-image: var(--icon-bell);
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 18px 18px;
-    }
-
-    /* MAIN LAYOUT */
-    .main {
-      padding-top: 32px;
-      padding-bottom: 40px;
-    }
-
-    .page-header {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 20px;
-    }
-
-    .page-title {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .page-subtitle {
-      font-size: 14px;
-      color: var(--color-text-secondary);
-      max-width: 480px;
-    }
-
-    /* METRICS / CHART SECTION */
-    .metrics-section {
-      background: var(--color-surface);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-soft);
-      padding: 20px 20px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .metrics-header {
+    .chart-footer{
       display: flex;
       justify-content: space-between;
-      gap: 16px;
       align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .tabs {
-      display: inline-flex;
-      padding: 4px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.12);
-      gap: 4px;
-    }
-
-    .tab {
-      border: none;
-      outline: none;
-      padding: 6px 14px;
-      border-radius: 999px;
+      padding: 8px 6px 2px;
+      color: var(--color-text-secondary);
       font-size: 13px;
-      font-weight: 500;
-      background: transparent;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      white-space: nowrap;
     }
 
-    .tab--active {
-      background: #FFFFFF;
-      color: #111827;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
-    }
-
-    body.theme-dark .tab--active {
-      background: #0B1120;
-      color: #E5E7EB;
-    }
-
-    .filters {
-      display: flex;
-      align-items: flex-end;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--color-text-secondary);
-    }
-
-    .filter-label {
-      font-weight: 500;
-    }
-
-    .filter-dates {
-      display: flex;
+    .chart-axis-label{
+      display: inline-flex;
       align-items: center;
       gap: 8px;
     }
-
-    .filter-input,
-    .filter-select {
-      height: 36px;
+    .chart-dot{
+      width: 9px;
+      height: 9px;
       border-radius: 999px;
-      border: 1px solid var(--color-input-border);
-      background: var(--color-input-bg);
-      padding: 0 12px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--color-text-primary);
-      outline: none;
-      min-width: 120px;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      background: var(--color-point);
+      display: inline-block;
     }
 
-    .filter-input::placeholder {
-      color: var(--color-input-placeholder);
+    /* Better chart rendering */
+    .chart-grid line,
+    .chart-axes line{
+      stroke: rgba(100, 116, 139, 0.24);
+      vector-effect: non-scaling-stroke;
+      shape-rendering: crispEdges;
     }
 
-    .filter-input:focus,
-    .filter-select:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+    .chart-line{
+      fill: none;
+      stroke: var(--color-point);
+      stroke-width: 2.25;
+      vector-effect: non-scaling-stroke;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
-    .filter-separator {
-      font-size: 14px;
-      color: var(--color-text-secondary);
+    .chart-area{
+      fill: var(--color-point);
+      opacity: 0.10;
     }
 
-    .chart-card {
-      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 55%),
-                  radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 60%),
-                  linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.85));
-      border-radius: 18px;
-      padding: 16px 18px 18px;
-      position: relative;
-      overflow: hidden;
-      min-height: 220px;
+    .chart-point{
+      fill: var(--color-surface);
+      stroke: var(--color-point);
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+      opacity: 0;
+      transition: opacity 120ms ease;
     }
 
-    body.theme-light .chart-card {
-      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 55%),
-                  radial-gradient(circle at bottom right, rgba(129, 230, 217, 0.18), transparent 60%),
-                  linear-gradient(135deg, #EEF2FF, #DBEAFE);
+    .chart-hover .chart-point{ opacity: 1; }
+
+    .chart-axis-text{
+      font-size: 12px;
+      fill: var(--color-text-secondary);
     }
 
-    .chart-inner {
-      position: relative;
-      height: 180px;
+    .chart-tip{
+      position: absolute;
+      pointer-events: none;
+      padding: 8px 10px;
       border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .chart-grid-lines {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(to right, rgba(148, 163, 184, 0.28) 1px, transparent 1px),
-        linear-gradient(to top, rgba(148, 163, 184, 0.28) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.6;
-    }
-
-    .chart-line {
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(
-          to right,
-          rgba(56, 189, 248, 0.2),
-          rgba(37, 99, 235, 0.6),
-          rgba(129, 140, 248, 0.7)
-        );
-      clip-path: polygon(0% 70%, 12% 50%, 25% 60%, 38% 40%, 52% 45%, 65% 30%, 80% 35%, 100% 20%, 100% 100%, 0% 100%);
-      opacity: 0.9;
-    }
-
-    .chart-footer {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-      font-size: 12px;
-      color: rgba(249, 250, 251, 0.85);
-    }
-
-    body.theme-light .chart-footer {
-      color: #111827;
-    }
-
-    .chart-axis-label {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-
-    .chart-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #38BDF8;
-    }
-
-    /* DAY LIST SECTION */
-    .day-section {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .day-section-header {
-      font-size: 14px;
-      color: var(--color-text-secondary);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .day-section-header span:first-child {
-      font-weight: 500;
-      color: var(--color-text-primary);
-    }
-
-    .day-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;        /* each item clearly separated */
-      background: none; /* no big container */
-    }
-
-    /* Each item separate, no borders */
-    details.day-card {
       background: var(--color-surface);
-      border-radius: 18px;
-      border: none;
-      padding: 12px 16px;
-      cursor: pointer;
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
-      transition: box-shadow 0.12s ease, transform 0.12s ease, background 0.12s ease;
-    }
-
-    details.day-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
-    }
-
-    details.day-card[open] {
-      background: var(--color-surface);
-    }
-
-    .day-summary {
-      list-style: none;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .day-summary-main {
-      flex: 0 0 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .day-date {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .day-kcal {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-    }
-
-    .day-summary-stats {
-      flex: 1 1 auto;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .stat-chip {
-      border-radius: 999px;
-      background: var(--color-chip-bg); /* soft blue, on-brand */
-      padding: 6px 10px;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .stat-label {
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-size: 10px;
-      color: var(--color-text-secondary);
-    }
-
-    .stat-value {
-      font-weight: 500;
-      color: var(--color-text-primary);
-    }
-
-    .day-toggle-icon {
-      flex: 0 0 auto;
-      margin-left: 8px;
-      font-size: 16px;
-      color: var(--color-text-secondary);
-      transition: transform 0.15s ease;
-    }
-
-    details.day-card[open] .day-toggle-icon {
-      transform: rotate(180deg);
-    }
-
-    .day-details {
-      margin-top: 10px;
-      border-top: 1px dashed var(--color-border-subtle);
-      padding-top: 10px;
-    }
-
-    .day-details-title {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--color-text-secondary);
-      margin-bottom: 6px;
-    }
-
-    .product-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .product-item {
-      display: grid;
-      grid-template-columns: 2.4fr 1fr 1fr;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--color-text-secondary);
-    }
-
-    .product-name {
-      color: var(--color-text-primary);
-      font-weight: 500;
-    }
-
-    .product-weight,
-    .product-kcal {
-      text-align: right;
-    }
-
-    /* ADD DAY BUTTON */
-    .btn-add-day {
-      border: none;
-      outline: none;
-      border-radius: var(--radius-pill);
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      background: var(--color-primary);
-      color: #FFFFFF;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
-      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
-    }
-
-    .btn-add-day:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 32px rgba(37, 99, 235, 0.45);
-      background: #1D4ED8;
-    }
-
-    .btn-add-day:active {
-      transform: translateY(0);
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
-    }
-
-    /* PAGINATION */
-    .pagination {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      font-size: 13px;
-    }
-
-    .page-btn {
-      min-width: 32px;
-      height: 32px;
-      border-radius: 999px;
       border: 1px solid var(--color-border-subtle);
-      background: var(--color-surface);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+      color: var(--color-text-primary);
+      font-size: 12px;
+      white-space: nowrap;
+      transform: translateZ(0);
+    }
+
+    /* Daily overview */
+    .section-head{
+      margin: 22px 0 12px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      padding: 0 10px;
-      cursor: pointer;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .section-title{
+      margin: 0;
+      font-size: 18px;
+    }
+    .section-sub{
+      margin: 2px 0 0;
       color: var(--color-text-secondary);
-      text-decoration: none;
-      font-weight: 500;
+      font-size: 13px;
+    }
+    .btn{
+      border: 0;
+      background: var(--color-point);
+      color: white;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
     }
 
-    .page-btn--active {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: #FFFFFF;
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.4);
+    .day{
+      border-top: 1px solid var(--color-border-subtle);
+      padding: 16px 2px 4px;
+      display: grid;
+      gap: 14px;
+    }
+    .day-top{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .day-date{
+      font-weight: 800;
+    }
+    .day-kcal{
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .chips{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .chip{
+      border: 1px solid var(--color-border-subtle);
+      background: rgba(255,255,255,0.75);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      min-width: 120px;
+    }
+    .chip strong{
+      display: block;
+      color: var(--color-text-primary);
+      font-size: 13px;
+      margin-top: 2px;
     }
 
-    .page-btn--ghost {
-      background: transparent;
+    .foods{
+      display: grid;
+      gap: 8px;
+      padding: 6px 0 12px;
+      color: var(--color-text-secondary);
+      font-size: 13px;
     }
-
-    /* RESPONSIVE */
-    @media (max-width: 1024px) {
-      .metrics-section {
-        padding: 18px 16px 20px;
-      }
-
-      .day-summary-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    .foods b{ color: var(--color-text-primary); }
+    .foods .item{
+      display: grid;
+      grid-template-columns: 1fr 90px 90px;
+      gap: 10px;
+      align-items: baseline;
     }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 0 16px;
-      }
-
-      .header-inner {
-        height: 56px;
-        padding-top: 8px;
-        padding-bottom: 8px;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-      }
-
-      .header-center {
-        display: none; /* hide big search bar on mobile */
-      }
-
-      .icon-button--search {
-        display: flex;
-      }
-
-      .icon-button--bell {
-        display: flex;
-      }
-
-      .logo-text {
-        display: none;
-      }
-
-      .avatar-name {
-        display: none;
-      }
-
-      .main {
-        padding-top: 24px;
-      }
-
-      .metrics-section {
-        padding: 16px 14px 18px;
-        border-radius: 18px;
-      }
-
-      .metrics-header {
-        align-items: flex-start;
-      }
-
-      .filters {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .filter-dates {
-        width: 100%;
-      }
-
-      .filter-input {
-        width: 100%;
-      }
-
-      .filter-select {
-        width: 100%;
-      }
-
-      .chart-card {
-        min-height: 190px;
-      }
-
-      .chart-inner {
-        height: 150px;
-      }
-
-      .page-title {
-        font-size: 24px;
-      }
-
-      .day-summary {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .day-summary-main {
-        flex: 0 0 auto;
-      }
-
-      /* MOBILE: chips use full width, one per row */
-      .day-summary-stats {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 стата в строке */
-        column-gap: 8px;
-        row-gap: 8px;
-      }
-
-      .day-toggle-icon {
-        align-self: flex-end;
-      }
-
-      .product-item {
-        grid-template-columns: 2fr 1fr 1.1fr;
-      }
-
-      .btn-add-day {
-        width: 100%;
-        justify-content: center;
-      }
+    .foods .item span:nth-child(2),
+    .foods .item span:nth-child(3){
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
   </style>
 </head>
 
-<!-- theme-light or theme-dark -->
-<body class="theme-light">
-  <!-- HEADER (same as home) -->
-  <header class="header">
-    <div class="container header-inner">
-      <div class="header-left">
-        <div class="logo-icon"></div>
-        <div class="logo-text">ServiceHub</div>
+<body>
+  <div class="wrap">
+    <h1>Calories &amp; weight</h1>
+    <p class="sub">Track your body weight and daily calorie intake over time.</p>
+
+    <div class="row">
+      <div class="tabs" role="tablist" aria-label="Metric tabs">
+        <button class="tab tab--active" role="tab" aria-selected="true" data-metric="weight">Weight (kg)</button>
+        <button class="tab" role="tab" aria-selected="false" data-metric="calories">Calories (kcal)</button>
       </div>
 
-      <div class="header-center">
-        <div class="search">
-          <div class="search-icon"></div>
-          <input
-            class="search-input"
-            type="text"
-            placeholder="Search services…"
-          />
+      <div class="filters">
+        <div class="field">
+          <div><b>Date range</b></div>
+          <div class="ctrl">
+            <input id="fromDate" type="date" />
+            <span class="dash">–</span>
+            <input id="toDate" type="date" />
+          </div>
         </div>
-      </div>
 
-      <div class="header-right">
-        <button class="icon-button icon-button--search" aria-label="Search">
-          🔍
-        </button>
-
-        <button class="icon-button icon-button--bell" aria-label="Notifications">
-          <span class="icon-bell" aria-hidden="true"></span>
-        </button>
-
-        <div class="avatar-block">
-          <img class="avatar-image" src="profile.webp" alt="Alex Johnson profile" loading="lazy" />
-          <div class="avatar-name">Alex Johnson</div>
+        <div class="field">
+          <div><b>Sort by</b></div>
+          <div class="ctrl">
+            <select id="sortBy">
+              <option value="recent" selected>Most recent</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
-  </header>
 
-  <!-- MAIN -->
-  <main class="main">
-    <div class="container">
-      <section class="page-header">
-        <h1 class="page-title">Calories & weight</h1>
-        <p class="page-subtitle">
-          Track your body weight and daily calorie intake over time.
-        </p>
-      </section>
+    <div class="card">
+      <div class="chart-card">
+        <div class="chart-inner">
+          <svg id="metricChart"
+               class="chart-svg"
+               viewBox="0 0 640 220"
+               preserveAspectRatio="xMidYMid meet"
+               role="img"
+               aria-label="Weight over time"></svg>
 
-      <!-- METRICS / GRAPH SECTION -->
-      <section class="metrics-section">
-        <div class="metrics-header">
-          <div class="tabs">
-            <button class="tab tab--active" type="button">Weight (kg)</button>
-            <button class="tab" type="button">Calories (kcal)</button>
-          </div>
-
-          <div class="filters">
-            <div class="filter-group">
-              <span class="filter-label">Date range</span>
-              <div class="filter-dates">
-                <input
-                  type="date"
-                  class="filter-input"
-                  placeholder="From"
-                />
-                <span class="filter-separator">–</span>
-                <input
-                  type="date"
-                  class="filter-input"
-                  placeholder="To"
-                />
-              </div>
-            </div>
-
-            <div class="filter-group">
-              <label class="filter-label" for="sort">Sort by</label>
-              <select id="sort" class="filter-select">
-                <option>Most recent</option>
-                <option>Oldest</option>
-                <option>Most calories</option>
-                <option>Lowest weight</option>
-              </select>
-            </div>
-          </div>
+          <div id="chartTip" class="chart-tip" hidden></div>
         </div>
 
-        <div class="chart-card">
-          <div class="chart-inner">
-            <div class="chart-grid-lines"></div>
-            <div class="chart-line"></div>
+        <div class="chart-footer">
+          <div class="chart-axis-label">
+            <span class="chart-dot" aria-hidden="true"></span>
+            <span id="metricLabel">Weight, kg</span>
           </div>
-          <div class="chart-footer">
-            <div class="chart-axis-label">
-              <span class="chart-dot"></span>
-              <span>Daily trend</span>
-            </div>
-            <span>Date →</span>
-          </div>
+          <span>Date →</span>
         </div>
-      </section>
+      </div>
 
-      <!-- DAY ITEMS SECTION -->
-      <section class="day-section">
-        <div class="day-section-header">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Daily overview</h2>
+          <div class="section-sub">Tap a row to view detailed products</div>
+        </div>
+        <button class="btn" type="button">+ Add day</button>
+      </div>
+
+      <!-- Example daily overview (static demo) -->
+      <div class="day">
+        <div class="day-top">
           <div>
-            <span>Daily overview</span><br />
-            <span style="font-size:12px;">Tap a row to view detailed products</span>
+            <div class="day-date">Aug 24, 2025</div>
+            <div class="day-kcal">2 150 kcal total</div>
           </div>
-          <button class="btn-add-day" type="button">
-            + Add day
-          </button>
+          <div class="chips">
+            <div class="chip">PROTEINS<strong>120 g</strong></div>
+            <div class="chip">FATS<strong>70 g</strong></div>
+            <div class="chip">CARBS<strong>230 g</strong></div>
+            <div class="chip">WEIGHT<strong>68.2 kg</strong></div>
+            <div class="chip">FAT %<strong>18.4%</strong></div>
+            <div class="chip">TREND<strong>-0.3 kg</strong></div>
+          </div>
         </div>
 
-        <div class="day-list">
-          <!-- DAY 1 -->
-          <details class="day-card" open>
-            <summary class="day-summary">
-              <div class="day-summary-main">
-                <div class="day-date">Aug 24, 2025</div>
-                <div class="day-kcal">2 150 kcal total</div>
-              </div>
-
-              <div class="day-summary-stats">
-                <div class="stat-chip">
-                  <span class="stat-label">Proteins</span>
-                  <span class="stat-value">120 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Fats</span>
-                  <span class="stat-value">70 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Carbs</span>
-                  <span class="stat-value">230 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Weight</span>
-                  <span class="stat-value">68.2 kg</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Fat %</span>
-                  <span class="stat-value">18.4%</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Trend</span>
-                  <span class="stat-value">–0.3 kg</span>
-                </div>
-              </div>
-
-              <span class="day-toggle-icon">⌄</span>
-            </summary>
-
-            <div class="day-details">
-              <div class="day-details-title">Products eaten</div>
-              <ul class="product-list">
-                <li class="product-item">
-                  <span class="product-name">Oatmeal with berries</span>
-                  <span class="product-weight">320 g</span>
-                  <span class="product-kcal">420 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Chicken breast</span>
-                  <span class="product-weight">180 g</span>
-                  <span class="product-kcal">330 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Rice & vegetables</span>
-                  <span class="product-weight">250 g</span>
-                  <span class="product-kcal">410 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Greek yogurt</span>
-                  <span class="product-weight">150 g</span>
-                  <span class="product-kcal">130 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Snacks & drinks</span>
-                  <span class="product-weight">—</span>
-                  <span class="product-kcal">860 kcal</span>
-                </li>
-              </ul>
-            </div>
-          </details>
-
-          <!-- DAY 2 -->
-          <details class="day-card">
-            <summary class="day-summary">
-              <div class="day-summary-main">
-                <div class="day-date">Aug 23, 2025</div>
-                <div class="day-kcal">1 930 kcal total</div>
-              </div>
-
-              <div class="day-summary-stats">
-                <div class="stat-chip">
-                  <span class="stat-label">Proteins</span>
-                  <span class="stat-value">105 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Fats</span>
-                  <span class="stat-value">62 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Carbs</span>
-                  <span class="stat-value">210 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Weight</span>
-                  <span class="stat-value">68.5 kg</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Fat %</span>
-                  <span class="stat-value">18.7%</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Trend</span>
-                  <span class="stat-value">–0.1 kg</span>
-                </div>
-              </div>
-
-              <span class="day-toggle-icon">⌄</span>
-            </summary>
-
-            <div class="day-details">
-              <div class="day-details-title">Products eaten</div>
-              <ul class="product-list">
-                <li class="product-item">
-                  <span class="product-name">Scrambled eggs</span>
-                  <span class="product-weight">220 g</span>
-                  <span class="product-kcal">380 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Salmon & quinoa</span>
-                  <span class="product-weight">260 g</span>
-                  <span class="product-kcal">520 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Salad</span>
-                  <span class="product-weight">180 g</span>
-                  <span class="product-kcal">210 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Cottage cheese</span>
-                  <span class="product-weight">150 g</span>
-                  <span class="product-kcal">160 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Snacks & drinks</span>
-                  <span class="product-weight">—</span>
-                  <span class="product-kcal">660 kcal</span>
-                </li>
-              </ul>
-            </div>
-          </details>
-
-          <!-- DAY 3 -->
-          <details class="day-card">
-            <summary class="day-summary">
-              <div class="day-summary-main">
-                <div class="day-date">Aug 22, 2025</div>
-                <div class="day-kcal">2 280 kcal total</div>
-              </div>
-
-              <div class="day-summary-stats">
-                <div class="stat-chip">
-                  <span class="stat-label">Proteins</span>
-                  <span class="stat-value">130 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Fats</span>
-                  <span class="stat-value">75 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Carbs</span>
-                  <span class="stat-value">240 g</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Weight</span>
-                  <span class="stat-value">68.8 kg</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Fat %</span>
-                  <span class="stat-value">18.9%</span>
-                </div>
-                <div class="stat-chip">
-                  <span class="stat-label">Trend</span>
-                  <span class="stat-value">+0.1 kg</span>
-                </div>
-              </div>
-
-              <span class="day-toggle-icon">⌄</span>
-            </summary>
-
-            <div class="day-details">
-              <div class="day-details-title">Products eaten</div>
-              <ul class="product-list">
-                <li class="product-item">
-                  <span class="product-name">Porridge with banana</span>
-                  <span class="product-weight">300 g</span>
-                  <span class="product-kcal">430 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Turkey & buckwheat</span>
-                  <span class="product-weight">270 g</span>
-                  <span class="product-kcal">540 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Pasta with vegetables</span>
-                  <span class="product-weight">260 g</span>
-                  <span class="product-kcal">520 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Protein bar</span>
-                  <span class="product-weight">60 g</span>
-                  <span class="product-kcal">240 kcal</span>
-                </li>
-                <li class="product-item">
-                  <span class="product-name">Snacks & drinks</span>
-                  <span class="product-weight">—</span>
-                  <span class="product-kcal">550 kcal</span>
-                </li>
-              </ul>
-            </div>
-          </details>
+        <div class="foods">
+          <div class="item"><b>Oatmeal with berries</b><span>320 g</span><span>420 kcal</span></div>
+          <div class="item"><b>Chicken breast</b><span>180 g</span><span>330 kcal</span></div>
+          <div class="item"><b>Rice &amp; vegetables</b><span>250 g</span><span>410 kcal</span></div>
+          <div class="item"><b>Greek yogurt</b><span>150 g</span><span>130 kcal</span></div>
+          <div class="item"><b>Snacks &amp; drinks</b><span>—</span><span>860 kcal</span></div>
         </div>
-
-        <!-- PAGINATION -->
-        <nav class="pagination" aria-label="Pagination">
-          <a href="#" class="page-btn page-btn--ghost">Previous</a>
-          <a href="#" class="page-btn page-btn--active">1</a>
-          <a href="#" class="page-btn">2</a>
-          <a href="#" class="page-btn">3</a>
-          <a href="#" class="page-btn page-btn--ghost">Next</a>
-        </nav>
-      </section>
+      </div>
     </div>
-  </main>
+  </div>
+
+  <script>
+    // ----------------------------
+    // Replace this with your real data
+    // date MUST be ISO (YYYY-MM-DD) for date inputs to work smoothly
+    // ----------------------------
+    let rawSeries = [
+      { date: "2025-08-19", weight: 68.9, calories: 2100 },
+      { date: "2025-08-20", weight: 68.6, calories: 1980 },
+      { date: "2025-08-21", weight: 68.7, calories: 2250 },
+      { date: "2025-08-22", weight: 68.8, calories: 2280 },
+      { date: "2025-08-23", weight: 68.5, calories: 1930 },
+      { date: "2025-08-24", weight: 68.2, calories: 2150 },
+    ];
+
+    const svg = document.getElementById("metricChart");
+    const tip = document.getElementById("chartTip");
+    const metricLabel = document.getElementById("metricLabel");
+    const tabs = [...document.querySelectorAll(".tab")];
+    const fromDate = document.getElementById("fromDate");
+    const toDate = document.getElementById("toDate");
+    const sortBy = document.getElementById("sortBy");
+
+    let metric = "weight";
+
+    function fmtShort(iso) {
+      const d = new Date(iso + "T00:00:00");
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    }
+
+    function clamp(n, a, b){ return Math.min(Math.max(n, a), b); }
+
+    function getFilteredSeries() {
+      const f = fromDate.value ? new Date(fromDate.value + "T00:00:00").getTime() : -Infinity;
+      const t = toDate.value ? new Date(toDate.value + "T23:59:59").getTime() : Infinity;
+
+      let s = rawSeries
+        .filter(d => {
+          const ms = new Date(d.date + "T00:00:00").getTime();
+          return ms >= f && ms <= t;
+        })
+        .slice();
+
+      s.sort((a,b) => {
+        const da = new Date(a.date).getTime();
+        const db = new Date(b.date).getTime();
+        return sortBy.value === "oldest" ? da - db : db - da;
+      });
+
+      // Chart should read left->right time (oldest->newest)
+      // so we reverse if UI shows most recent first.
+      if (sortBy.value === "recent") s.reverse();
+      return s;
+    }
+
+    function renderChart() {
+      const series = getFilteredSeries();
+
+      metricLabel.textContent = metric === "weight" ? "Weight, kg" : "Calories, kcal";
+      svg.setAttribute("aria-label", metric === "weight" ? "Weight over time" : "Calories over time");
+
+      // Empty state
+      if (series.length < 2) {
+        svg.innerHTML = `
+          <text x="50%" y="50%" text-anchor="middle" class="chart-axis-text">
+            Not enough data to plot
+          </text>`;
+        tip.hidden = true;
+        return;
+      }
+
+      // Layout (matches viewBox)
+      const W = 640, H = 220;
+      const padL = 56, padR = 20, padT = 16, padB = 40;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+
+      // Scale
+      const vals = series.map(d => d[metric]).filter(v => Number.isFinite(v));
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      const span = (max - min) || 1;
+      const yMin = min - span * 0.15;
+      const yMax = max + span * 0.15;
+
+      const xAt = i => padL + (innerW * (i / (series.length - 1 || 1)));
+      const yAt = v => padT + (innerH * (1 - (v - yMin) / (yMax - yMin)));
+
+      // Points
+      const pts = series.map((d, i) => [xAt(i), yAt(d[metric])]);
+
+      // Path
+      const lineD = pts.map((p, i) => `${i ? "L" : "M"} ${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(" ");
+      const areaD = `M ${padL} ${padT + innerH} ${lineD.replace(/^M/, "L")} L ${padL + innerW} ${padT + innerH} Z`;
+
+      // Y ticks
+      const ticks = 4;
+      const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
+        const v = yMin + (i * (yMax - yMin) / ticks);
+        return { v, y: yAt(v) };
+      });
+
+      // X labels: first / mid / last
+      const mid = Math.floor((series.length - 1) / 2);
+      const xLabels = [
+        { i: 0, text: fmtShort(series[0].date) },
+        { i: mid, text: fmtShort(series[mid].date) },
+        { i: series.length - 1, text: fmtShort(series[series.length - 1].date) },
+      ];
+
+      svg.innerHTML = `
+        <g class="chart-grid">
+          ${yTicks.map(t => `<line x1="${padL}" y1="${t.y}" x2="${padL + innerW}" y2="${t.y}"></line>`).join("")}
+        </g>
+
+        <g class="chart-axes">
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + innerH}"></line>
+          <line x1="${padL}" y1="${padT + innerH}" x2="${padL + innerW}" y2="${padT + innerH}"></line>
+        </g>
+
+        <g class="chart-ylabels">
+          ${yTicks.map(t => `
+            <text class="chart-axis-text" x="${padL - 10}" y="${t.y + 4}" text-anchor="end">
+              ${metric === "weight" ? t.v.toFixed(1) : Math.round(t.v)}
+            </text>`).join("")}
+        </g>
+
+        <path class="chart-area" d="${areaD}"></path>
+        <path class="chart-line" d="${lineD}"></path>
+
+        <g class="chart-points">
+          ${pts.map((p, i) => `
+            <circle class="chart-point"
+              cx="${p[0]}" cy="${p[1]}" r="5"
+              data-i="${i}"></circle>
+          `).join("")}
+        </g>
+
+        <g class="chart-xlabels">
+          ${xLabels.map(xl => `
+            <text class="chart-axis-text" x="${xAt(xl.i)}" y="${padT + innerH + 26}" text-anchor="middle">
+              ${xl.text}
+            </text>`).join("")}
+        </g>
+      `;
+
+      // Tooltip interactions (pointer = mouse + touch + pen)
+      function nearestIndex(clientX) {
+        const box = svg.getBoundingClientRect();
+        const relX = clientX - box.left;
+        const xSvg = (relX / box.width) * W;
+
+        let best = 0, bestDist = Infinity;
+        pts.forEach((p, i) => {
+          const dist = Math.abs(p[0] - xSvg);
+          if (dist < bestDist) { bestDist = dist; best = i; }
+        });
+        return best;
+      }
+
+      function showAt(i, clientX, clientY) {
+        const d = series[i];
+        const v = d[metric];
+
+        tip.hidden = false;
+        tip.innerHTML =
+          `<strong>${fmtShort(d.date)}</strong><br>` +
+          (metric === "weight" ? `${Number(v).toFixed(1)} kg` : `${Math.round(Number(v))} kcal`);
+
+        const box = svg.getBoundingClientRect();
+        const x = clamp(clientX - box.left + 12, 12, box.width - 150);
+        const y = clamp(clientY - box.top - 50, 8, box.height - 70);
+
+        tip.style.left = `${x}px`;
+        tip.style.top  = `${y}px`;
+      }
+
+      function onMove(e) {
+        svg.classList.add("chart-hover");
+        const i = nearestIndex(e.clientX);
+        showAt(i, e.clientX, e.clientY);
+      }
+
+      function onLeave() {
+        svg.classList.remove("chart-hover");
+        tip.hidden = true;
+      }
+
+      svg.onpointermove = onMove;
+      svg.onpointerleave = onLeave;
+      svg.onpointerdown = onMove; // tap shows tooltip
+    }
+
+    function setActiveTab(nextMetric) {
+      metric = nextMetric;
+
+      tabs.forEach(btn => {
+        const on = btn.dataset.metric === metric;
+        btn.classList.toggle("tab--active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
+      });
+
+      renderChart();
+    }
+
+    // Init date range inputs from data
+    (function initDateRange() {
+      const dates = rawSeries.map(d => d.date).sort();
+      if (dates.length) {
+        fromDate.value = dates[0];
+        toDate.value = dates[dates.length - 1];
+      }
+    })();
+
+    // Events
+    tabs.forEach(btn => btn.addEventListener("click", () => setActiveTab(btn.dataset.metric)));
+    fromDate.addEventListener("change", renderChart);
+    toDate.addEventListener("change", renderChart);
+    sortBy.addEventListener("change", renderChart);
+
+    // Initial render
+    setActiveTab("weight");
+  </script>
 </body>
 </html>

@@ -1,9 +1,11 @@
 .calories-page {
   --color-primary: #2563EB;
+  --color-point: var(--color-primary);
   --radius-lg: 24px;
   --radius-md: 16px;
   --radius-pill: 9999px;
   --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --shadow-sm: 0 10px 25px rgba(15, 23, 42, 0.08);
   --font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 
@@ -333,73 +335,85 @@
 }
 
 .calories-page .chart-card {
-  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 60%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.85));
-  border-radius: 18px;
-  padding: 16px 18px 18px;
-  position: relative;
+  border-radius: 22px;
+  border: 1px solid var(--color-border-subtle);
+  background: rgba(255, 255, 255, 0.65);
+  padding: 14px 14px 10px;
   overflow: hidden;
-  min-height: 220px;
 }
 
 .calories-page.theme-light .chart-card {
-  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(129, 230, 217, 0.18), transparent 60%),
-    linear-gradient(135deg, #EEF2FF, #DBEAFE);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .calories-page .chart-inner {
   position: relative;
-  height: 180px;
-  border-radius: 12px;
-  overflow: hidden;
 }
 
-.calories-page .chart-grid-lines {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(148, 163, 184, 0.28) 1px, transparent 1px),
-    linear-gradient(to top, rgba(148, 163, 184, 0.28) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.6;
+.calories-page .chart-svg {
+  width: 100%;
+  height: 240px;
+  display: block;
+}
+
+.calories-page .chart-grid line,
+.calories-page .chart-axes line {
+  stroke: rgba(100, 116, 139, 0.24);
+  vector-effect: non-scaling-stroke;
+  shape-rendering: crispEdges;
 }
 
 .calories-page .chart-line {
+  fill: none;
+  stroke: var(--color-point);
+  stroke-width: 2.25;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.calories-page .chart-area {
+  fill: var(--color-point);
+  opacity: 0.10;
+}
+
+.calories-page .chart-point {
+  fill: var(--color-surface);
+  stroke: var(--color-point);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.calories-page .chart-hover .chart-point {
+  opacity: 1;
+}
+
+.calories-page .chart-axis-text {
+  font-size: 12px;
+  fill: var(--color-text-secondary);
+}
+
+.calories-page .chart-tip {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(56, 189, 248, 0.2),
-    rgba(37, 99, 235, 0.6),
-    rgba(129, 140, 248, 0.7)
-  );
-  clip-path: polygon(
-    0% 70%,
-    12% 50%,
-    25% 60%,
-    38% 40%,
-    52% 45%,
-    65% 30%,
-    80% 35%,
-    100% 20%,
-    100% 100%,
-    0% 100%
-  );
-  opacity: 0.9;
+  pointer-events: none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .calories-page .chart-footer {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
-  font-size: 12px;
-  color: rgba(249, 250, 251, 0.85);
-}
-
-.calories-page.theme-light .chart-footer {
-  color: #111827;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 .calories-page .chart-axis-label {
@@ -409,10 +423,10 @@
 }
 
 .calories-page .chart-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
-  background: #38BDF8;
+  background: var(--color-point);
 }
 
 .calories-page .chart-overlay {
@@ -748,12 +762,8 @@
     width: 100%;
   }
 
-  .calories-page .chart-card {
-    min-height: 190px;
-  }
-
-  .calories-page .chart-inner {
-    height: 150px;
+  .calories-page .chart-svg {
+    height: 200px;
   }
 
   .calories-page .page-title {
