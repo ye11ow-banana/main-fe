@@ -28,11 +28,17 @@ export type CalorieDateRangeFilters = {
   end_date: string; // YYYY-MM-DD
 };
 
+export type NameCode = {
+  name: string;
+  code: string;
+};
+
 export type DaysSortBy = "most_recent" | "oldest" | "most_calories" | "lowest_weight";
 
 export type DayProduct = {
   id: string;
   name: string;
+  weight: string | number;
   proteins: string | number;
   fats: string | number;
   carbs: string | number;
@@ -58,6 +64,13 @@ export type CalorieDaysParams = {
   sort_by: DaysSortBy;
   page?: number;
 };
+
+// GET /calorie/sort_bys — returns available sorting options for /calorie/days
+export function getCalorieSortBys() {
+  return authHttp<ResponseDTO<NameCode[]>>("/calorie/sort_bys", {
+    method: "GET",
+  });
+}
 
 // Backend: ../main-be FastAPI
 // GET /calorie/trend/items — endpoint used for the calories/weight graph.

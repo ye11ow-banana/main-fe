@@ -4,8 +4,11 @@ import { ApiError } from "../../api/http";
 import {
   getCalorieDateRangeFilters,
   getCalorieDays,
+  getCalorieSortBys,
   getCalorieTrendItems,
   type DayFullInfo,
+  type DaysSortBy,
+  type NameCode,
   type TrendItem,
   type TrendType,
 } from "../../api/calories";
@@ -82,14 +85,32 @@ function formatSignedKg(v: string | number | null): string {
   return `${sign}${Math.abs(n).toFixed(1)} kg`;
 }
 
+function formatMaybeGrams(v: string | number | null | undefined): string {
+  if (v == null) return "—";
+  const n = toNumber(v);
+  if (!Number.isFinite(n) || n <= 0) return "—";
+  return `${Math.round(n)} g`;
+}
+
 export function CaloriesList({ user }: { user: UserInfo }) {
   const defaultEnd = useMemo(() => toDateInputValue(new Date()), []);
   const defaultStart = useMemo(() => toDateInputValue(addDays(new Date(), -30)), []);
 
+  const fallbackSortOptions: NameCode[] = useMemo(
+    () => [
+      { name: "Most recent", code: "most_recent" },
+      { name: "Oldest", code: "oldest" },
+      { name: "Most calories", code: "most_calories" },
+      { name: "Lowest weight", code: "lowest_weight" },
+    ],
+    []
+  );
+
   const [trendType, setTrendType] = useState<TrendType>("weight");
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
-  const [sortBy, setSortBy] = useState<"recent" | "oldest">("recent");
+  const [sortBy, setSortBy] = useState<DaysSortBy>("most_recent");
+  const [sortOptions, setSortOptions] = useState<NameCode[]>(fallbackSortOptions);
 
   const chartSvgRef = useRef<SVGSVGElement | null>(null);
   const chartTipRef = useRef<HTMLDivElement | null>(null);
@@ -130,6 +151,34 @@ export function CaloriesList({ user }: { user: UserInfo }) {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSortBys() {
+      try {
+        const res = await getCalorieSortBys();
+        if (!isMounted) return;
+
+        const options = Array.isArray(res?.data) ? res.data : [];
+        const nextOptions = options.length > 0 ? options : fallbackSortOptions;
+        setSortOptions(nextOptions);
+
+        // Keep current selection if still present, otherwise default to first option.
+        setSortBy((prev) => {
+          if (nextOptions.some((o) => o.code === prev)) return prev;
+          return (nextOptions[0]?.code as DaysSortBy | undefined) ?? prev;
+        });
+      } catch {
+        // Keep fallback options.
+      }
+    }
+
+    void loadSortBys();
+    return () => {
+      isMounted = false;
+    };
+  }, [fallbackSortOptions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -177,7 +226,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
         const res = await getCalorieDays({
           start_date: startDate,
           end_date: endDate,
-          sort_by: sortBy === "recent" ? "most_recent" : "oldest",
+          sort_by: sortBy,
           page: daysPage,
         });
 
@@ -209,8 +258,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
       .map((it) => ({ date: it.date, value: toNumber(it.value) }));
 
     normalized.sort((a, b) => {
-      const cmp = a.date.localeCompare(b.date);
-      return sortBy === "oldest" ? cmp : -cmp;
+      return a.date.localeCompare(b.date);
     });
 
     // SVG layout (matches base/calories-list.html viewBox)
@@ -248,8 +296,8 @@ export function CaloriesList({ user }: { user: UserInfo }) {
       };
     }
 
-    // Chart should read left->right time (oldest->newest)
-    const series = sortBy === "recent" ? [...normalized].reverse() : normalized;
+    // Chart reads left->right time (oldest->newest)
+    const series = normalized;
 
     const vals = series.map((d) => d.value);
     const min = Math.min(...vals);
@@ -300,7 +348,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
       yTicks,
       xLabels,
     };
-  }, [items, sortBy, trendType]);
+  }, [items, trendType]);
 
   function updateHoverFromPointer(clientX: number, clientY: number) {
     if (!chart.hasData || chart.pts.length === 0) return;
@@ -435,10 +483,13 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                     id="sort"
                     className="filter-select"
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as "recent" | "oldest")}
+                    onChange={(e) => setSortBy(e.target.value as DaysSortBy)}
                   >
-                    <option value="recent">Most recent</option>
-                    <option value="oldest">Oldest</option>
+                    {sortOptions.map((o) => (
+                      <option key={o.code} value={o.code}>
+                        {o.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -658,10 +709,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                           {products.map((p) => (
                             <li key={p.id} className="product-item">
                               <span className="product-name">{p.name}</span>
-                              <span className="product-weight">
-                                P {Math.round(toNumber(p.proteins))} / F {Math.round(toNumber(p.fats))} / C{" "}
-                                {Math.round(toNumber(p.carbs))}
-                              </span>
+                              <span className="product-weight">{formatMaybeGrams(p.weight)}</span>
                               <span className="product-kcal">{Math.round(toNumber(p.calories))} kcal</span>
                             </li>
                           ))}
