@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { UserInfo } from "../../api/auth";
 import { ApiError } from "../../api/http";
-import { getCalorieTrendItems, type TrendItem, type TrendType } from "../../api/calories";
+import {
+  getCalorieDateRangeFilters,
+  getCalorieDays,
+  getCalorieTrendItems,
+  type DayFullInfo,
+  type TrendItem,
+  type TrendType,
+} from "../../api/calories";
 import "./CaloriesList.css";
 
 function toDateInputValue(d: Date): string {
@@ -46,6 +53,35 @@ function formatValue(value: number, type: TrendType): string {
   return `${value.toFixed(1)} kg`;
 }
 
+function formatDayDate(isoDatetime: string): string {
+  const dt = new Date(isoDatetime);
+  if (Number.isNaN(dt.getTime())) return isoDatetime;
+  return dt.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatMaybeKg(v: string | number | null): string {
+  if (v == null) return "—";
+  const n = toNumber(v);
+  return `${n.toFixed(1)} kg`;
+}
+
+function formatMaybePercent(v: string | number | null): string {
+  if (v == null) return "—";
+  const n = toNumber(v);
+  return `${n.toFixed(1)}%`;
+}
+
+function formatSignedKg(v: string | number | null): string {
+  if (v == null) return "—";
+  const n = toNumber(v);
+  const sign = n > 0 ? "+" : n < 0 ? "–" : "";
+  return `${sign}${Math.abs(n).toFixed(1)} kg`;
+}
+
 export function CaloriesList({ user }: { user: UserInfo }) {
   const defaultEnd = useMemo(() => toDateInputValue(new Date()), []);
   const defaultStart = useMemo(() => toDateInputValue(addDays(new Date(), -30)), []);
@@ -62,6 +98,38 @@ export function CaloriesList({ user }: { user: UserInfo }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<TrendItem[] | null>(null);
+
+  const [daysLoading, setDaysLoading] = useState(true);
+  const [daysError, setDaysError] = useState<string | null>(null);
+  const [daysPage, setDaysPage] = useState(1);
+  const [daysPageCount, setDaysPageCount] = useState(1);
+  const [days, setDays] = useState<DayFullInfo[]>([]);
+  const [openDayId, setOpenDayId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDateRange() {
+      try {
+        const res = await getCalorieDateRangeFilters();
+        if (!isMounted) return;
+
+        const start = res?.data?.start_date;
+        const end = res?.data?.end_date;
+        if (typeof start === "string" && typeof end === "string" && start && end) {
+          setStartDate(start);
+          setEndDate(end);
+        }
+      } catch {
+        // Keep defaults if the endpoint is unavailable.
+      }
+    }
+
+    void loadDateRange();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -92,6 +160,47 @@ export function CaloriesList({ user }: { user: UserInfo }) {
       isMounted = false;
     };
   }, [endDate, startDate, trendType]);
+
+  useEffect(() => {
+    setDaysPage(1);
+    setOpenDayId(null);
+  }, [endDate, startDate, sortBy]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDays() {
+      setDaysLoading(true);
+      setDaysError(null);
+
+      try {
+        const res = await getCalorieDays({
+          start_date: startDate,
+          end_date: endDate,
+          sort_by: sortBy === "recent" ? "most_recent" : "oldest",
+          page: daysPage,
+        });
+
+        if (!isMounted) return;
+
+        const payload = res?.data;
+        const list = Array.isArray(payload?.data) ? payload.data : [];
+        setDays(list);
+        setDaysPageCount(typeof payload?.page_count === "number" && payload.page_count > 0 ? payload.page_count : 1);
+      } catch (err) {
+        if (!isMounted) return;
+        if (err instanceof ApiError) setDaysError(err.message);
+        else setDaysError("Unexpected error");
+      } finally {
+        if (isMounted) setDaysLoading(false);
+      }
+    }
+
+    void loadDays();
+    return () => {
+      isMounted = false;
+    };
+  }, [daysPage, endDate, startDate, sortBy]);
 
   const chart = useMemo(() => {
     const raw = items ?? [];
@@ -471,231 +580,193 @@ export function CaloriesList({ user }: { user: UserInfo }) {
             </div>
 
             <div className="day-list">
-              <details className="day-card" open>
-                <summary className="day-summary">
-                  <div className="day-summary-main">
-                    <div className="day-date">Aug 24, 2025</div>
-                    <div className="day-kcal">2 150 kcal total</div>
-                  </div>
+              {daysLoading && (
+                <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Loading days…</div>
+              )}
 
-                  <div className="day-summary-stats">
-                    <div className="stat-chip">
-                      <span className="stat-label">Proteins</span>
-                      <span className="stat-value">120 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Fats</span>
-                      <span className="stat-value">70 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Carbs</span>
-                      <span className="stat-value">230 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Weight</span>
-                      <span className="stat-value">68.2 kg</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Fat %</span>
-                      <span className="stat-value">18.4%</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Trend</span>
-                      <span className="stat-value">–0.3 kg</span>
-                    </div>
-                  </div>
+              {!daysLoading && daysError && (
+                <div style={{ fontSize: 12, color: "#DC2626" }}>{daysError}</div>
+              )}
 
-                  <span className="day-toggle-icon">⌄</span>
-                </summary>
-
-                <div className="day-details">
-                  <div className="day-details-title">Products eaten</div>
-                  <ul className="product-list">
-                    <li className="product-item">
-                      <span className="product-name">Oatmeal with berries</span>
-                      <span className="product-weight">320 g</span>
-                      <span className="product-kcal">420 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Chicken breast</span>
-                      <span className="product-weight">180 g</span>
-                      <span className="product-kcal">330 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Rice &amp; vegetables</span>
-                      <span className="product-weight">250 g</span>
-                      <span className="product-kcal">410 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Greek yogurt</span>
-                      <span className="product-weight">150 g</span>
-                      <span className="product-kcal">130 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Snacks &amp; drinks</span>
-                      <span className="product-weight">—</span>
-                      <span className="product-kcal">860 kcal</span>
-                    </li>
-                  </ul>
+              {!daysLoading && !daysError && days.length === 0 && (
+                <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
+                  No days found for the selected range.
                 </div>
-              </details>
+              )}
 
-              <details className="day-card">
-                <summary className="day-summary">
-                  <div className="day-summary-main">
-                    <div className="day-date">Aug 23, 2025</div>
-                    <div className="day-kcal">1 930 kcal total</div>
-                  </div>
+              {!daysLoading && !daysError &&
+                days.map((day) => {
+                  const totalCalories = Math.round(toNumber(day.total_calories)).toLocaleString();
+                  const products = Array.isArray(day.products) ? day.products : [];
+                  const isOpen = openDayId === day.id;
 
-                  <div className="day-summary-stats">
-                    <div className="stat-chip">
-                      <span className="stat-label">Proteins</span>
-                      <span className="stat-value">105 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Fats</span>
-                      <span className="stat-value">62 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Carbs</span>
-                      <span className="stat-value">210 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Weight</span>
-                      <span className="stat-value">68.5 kg</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Fat %</span>
-                      <span className="stat-value">18.7%</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Trend</span>
-                      <span className="stat-value">–0.1 kg</span>
-                    </div>
-                  </div>
+                  return (
+                    <details key={day.id} className="day-card" open={isOpen}>
+                      <summary
+                        className="day-summary"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setOpenDayId((prev) => (prev === day.id ? null : day.id));
+                        }}
+                      >
+                        <div className="day-summary-main">
+                          <div className="day-date">{formatDayDate(day.created_at)}</div>
+                          <div className="day-kcal">{totalCalories} kcal total</div>
+                        </div>
 
-                  <span className="day-toggle-icon">⌄</span>
-                </summary>
+                        <div className="day-summary-stats">
+                          <div className="stat-chip">
+                            <span className="stat-label">Proteins</span>
+                            <span className="stat-value">{Math.round(toNumber(day.total_proteins))} g</span>
+                          </div>
+                          <div className="stat-chip">
+                            <span className="stat-label">Fats</span>
+                            <span className="stat-value">{Math.round(toNumber(day.total_fats))} g</span>
+                          </div>
+                          <div className="stat-chip">
+                            <span className="stat-label">Carbs</span>
+                            <span className="stat-value">{Math.round(toNumber(day.total_carbs))} g</span>
+                          </div>
+                          <div className="stat-chip">
+                            <span className="stat-label">Weight</span>
+                            <span className="stat-value">{formatMaybeKg(day.body_weight)}</span>
+                          </div>
+                          <div className="stat-chip">
+                            <span className="stat-label">Fat %</span>
+                            <span className="stat-value">{formatMaybePercent(day.body_fat)}</span>
+                          </div>
+                          <div className="stat-chip">
+                            <span className="stat-label">Trend</span>
+                            <span className="stat-value">{formatSignedKg(day.trend)}</span>
+                          </div>
+                        </div>
 
-                <div className="day-details">
-                  <div className="day-details-title">Products eaten</div>
-                  <ul className="product-list">
-                    <li className="product-item">
-                      <span className="product-name">Scrambled eggs</span>
-                      <span className="product-weight">220 g</span>
-                      <span className="product-kcal">380 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Salmon &amp; quinoa</span>
-                      <span className="product-weight">260 g</span>
-                      <span className="product-kcal">520 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Salad</span>
-                      <span className="product-weight">180 g</span>
-                      <span className="product-kcal">210 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Cottage cheese</span>
-                      <span className="product-weight">150 g</span>
-                      <span className="product-kcal">160 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Snacks &amp; drinks</span>
-                      <span className="product-weight">—</span>
-                      <span className="product-kcal">660 kcal</span>
-                    </li>
-                  </ul>
-                </div>
-              </details>
+                        <span className="day-toggle-icon">⌄</span>
+                      </summary>
 
-              <details className="day-card">
-                <summary className="day-summary">
-                  <div className="day-summary-main">
-                    <div className="day-date">Aug 22, 2025</div>
-                    <div className="day-kcal">2 280 kcal total</div>
-                  </div>
+                      <div className="day-details">
+                        <div className="day-details-title">Products eaten</div>
+                        <ul className="product-list">
+                          {products.length === 0 && (
+                            <li className="product-item">
+                              <span className="product-name">No products</span>
+                              <span className="product-weight"></span>
+                              <span className="product-kcal"></span>
+                            </li>
+                          )}
 
-                  <div className="day-summary-stats">
-                    <div className="stat-chip">
-                      <span className="stat-label">Proteins</span>
-                      <span className="stat-value">130 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Fats</span>
-                      <span className="stat-value">75 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Carbs</span>
-                      <span className="stat-value">240 g</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Weight</span>
-                      <span className="stat-value">68.8 kg</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Fat %</span>
-                      <span className="stat-value">18.9%</span>
-                    </div>
-                    <div className="stat-chip">
-                      <span className="stat-label">Trend</span>
-                      <span className="stat-value">+0.1 kg</span>
-                    </div>
-                  </div>
-
-                  <span className="day-toggle-icon">⌄</span>
-                </summary>
-
-                <div className="day-details">
-                  <div className="day-details-title">Products eaten</div>
-                  <ul className="product-list">
-                    <li className="product-item">
-                      <span className="product-name">Porridge with banana</span>
-                      <span className="product-weight">300 g</span>
-                      <span className="product-kcal">430 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Turkey &amp; buckwheat</span>
-                      <span className="product-weight">270 g</span>
-                      <span className="product-kcal">540 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Pasta with vegetables</span>
-                      <span className="product-weight">260 g</span>
-                      <span className="product-kcal">520 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Protein bar</span>
-                      <span className="product-weight">60 g</span>
-                      <span className="product-kcal">240 kcal</span>
-                    </li>
-                    <li className="product-item">
-                      <span className="product-name">Snacks &amp; drinks</span>
-                      <span className="product-weight">—</span>
-                      <span className="product-kcal">550 kcal</span>
-                    </li>
-                  </ul>
-                </div>
-              </details>
+                          {products.map((p) => (
+                            <li key={p.id} className="product-item">
+                              <span className="product-name">{p.name}</span>
+                              <span className="product-weight">
+                                P {Math.round(toNumber(p.proteins))} / F {Math.round(toNumber(p.fats))} / C{" "}
+                                {Math.round(toNumber(p.carbs))}
+                              </span>
+                              <span className="product-kcal">{Math.round(toNumber(p.calories))} kcal</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </details>
+                  );
+                })}
             </div>
 
-            <nav className="pagination" aria-label="Pagination">
-              <a href="#" className="page-btn page-btn--ghost" onClick={(e) => e.preventDefault()}>
-                Previous
-              </a>
-              <a href="#" className="page-btn page-btn--active" onClick={(e) => e.preventDefault()}>
-                1
-              </a>
-              <a href="#" className="page-btn" onClick={(e) => e.preventDefault()}>
-                2
-              </a>
-              <a href="#" className="page-btn" onClick={(e) => e.preventDefault()}>
-                3
-              </a>
-              <a href="#" className="page-btn page-btn--ghost" onClick={(e) => e.preventDefault()}>
-                Next
-              </a>
-            </nav>
+            {daysPageCount > 1 && (
+              <nav className="pagination" aria-label="Pagination">
+                <a
+                  href="#"
+                  className="page-btn page-btn--ghost"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (daysPage > 1) setDaysPage((p) => p - 1);
+                  }}
+                >
+                  Previous
+                </a>
+
+                {(() => {
+                  const maxBtns = 7;
+                  const start = clamp(daysPage - 3, 1, Math.max(1, daysPageCount - maxBtns + 1));
+                  const end = Math.min(daysPageCount, start + maxBtns - 1);
+                  const pages: number[] = [];
+                  for (let i = start; i <= end; i++) pages.push(i);
+
+                  return (
+                    <>
+                      {start > 1 && (
+                        <a
+                          href="#"
+                          className={daysPage === 1 ? "page-btn page-btn--active" : "page-btn"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setDaysPage(1);
+                          }}
+                        >
+                          1
+                        </a>
+                      )}
+                      {start > 2 && (
+                        <span
+                          className="page-btn page-btn--ghost"
+                          aria-hidden="true"
+                          style={{ cursor: "default" }}
+                        >
+                          …
+                        </span>
+                      )}
+
+                      {pages.map((p) => (
+                        <a
+                          key={p}
+                          href="#"
+                          className={p === daysPage ? "page-btn page-btn--active" : "page-btn"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setDaysPage(p);
+                          }}
+                        >
+                          {p}
+                        </a>
+                      ))}
+
+                      {end < daysPageCount - 1 && (
+                        <span
+                          className="page-btn page-btn--ghost"
+                          aria-hidden="true"
+                          style={{ cursor: "default" }}
+                        >
+                          …
+                        </span>
+                      )}
+                      {end < daysPageCount && (
+                        <a
+                          href="#"
+                          className={daysPage === daysPageCount ? "page-btn page-btn--active" : "page-btn"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setDaysPage(daysPageCount);
+                          }}
+                        >
+                          {daysPageCount}
+                        </a>
+                      )}
+                    </>
+                  );
+                })()}
+
+                <a
+                  href="#"
+                  className="page-btn page-btn--ghost"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (daysPage < daysPageCount) setDaysPage((p) => p + 1);
+                  }}
+                >
+                  Next
+                </a>
+              </nav>
+            )}
           </section>
         </div>
       </main>

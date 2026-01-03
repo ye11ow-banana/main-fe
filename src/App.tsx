@@ -22,13 +22,9 @@ function useAuthState(): AuthState {
   );
 
   useEffect(() => {
-    if (!hasAccessToken()) {
-      setState({ status: "unauthenticated" });
-      return;
-    }
+    if (!hasAccessToken()) return;
 
     let cancelled = false;
-    setState({ status: "checking" });
     getMe()
       .then((res) => {
         if (cancelled) return;

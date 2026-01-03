@@ -4,6 +4,12 @@ type ResponseDTO<T> = {
   data: T;
 };
 
+type PaginationDTO<T> = {
+  page_count: number;
+  total_count: number;
+  data: T[];
+};
+
 export type TrendType = "weight" | "calorie";
 
 export type TrendItem = {
@@ -17,6 +23,42 @@ export type TrendItemsParams = {
   type: TrendType;
 };
 
+export type CalorieDateRangeFilters = {
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+};
+
+export type DaysSortBy = "most_recent" | "oldest" | "most_calories" | "lowest_weight";
+
+export type DayProduct = {
+  id: string;
+  name: string;
+  proteins: string | number;
+  fats: string | number;
+  carbs: string | number;
+  calories: string | number;
+};
+
+export type DayFullInfo = {
+  id: string;
+  body_weight: string | number | null;
+  body_fat: string | number | null;
+  trend: string | number | null;
+  created_at: string; // ISO datetime
+  total_proteins: string | number;
+  total_fats: string | number;
+  total_carbs: string | number;
+  total_calories: string | number;
+  products: DayProduct[];
+};
+
+export type CalorieDaysParams = {
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+  sort_by: DaysSortBy;
+  page?: number;
+};
+
 // Backend: ../main-be FastAPI
 // GET /calorie/trend/items — endpoint used for the calories/weight graph.
 export function getCalorieTrendItems(params: TrendItemsParams) {
@@ -27,6 +69,28 @@ export function getCalorieTrendItems(params: TrendItemsParams) {
   });
 
   return authHttp<ResponseDTO<TrendItem[]>>(`/calorie/trend/items?${query.toString()}`,
+  {
+    method: "GET",
+  });
+}
+
+// GET /calorie/filters/date-range — returns available start/end dates for filters.
+export function getCalorieDateRangeFilters() {
+  return authHttp<ResponseDTO<CalorieDateRangeFilters>>("/calorie/filters/date-range", {
+    method: "GET",
+  });
+}
+
+// GET /calorie/days — paginated daily overview incl. product list per day.
+export function getCalorieDays(params: CalorieDaysParams) {
+  const query = new URLSearchParams({
+    start_date: params.start_date,
+    end_date: params.end_date,
+    sort_by: params.sort_by,
+    page: String(params.page ?? 1),
+  });
+
+  return authHttp<ResponseDTO<PaginationDTO<DayFullInfo>>>(`/calorie/days?${query.toString()}`,
   {
     method: "GET",
   });
