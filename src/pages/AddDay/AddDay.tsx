@@ -57,8 +57,6 @@ export function AddDay({ user }: AddDayProps) {
     if (file) {
       const url = URL.createObjectURL(file);
       setImagePreview(url);
-    } else {
-      setImagePreview(null);
     }
   };
 
