@@ -422,6 +422,10 @@
       box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.22);
     }
 
+    .add-day-page .review-input[readonly] {
+      cursor: pointer;
+    }
+
     .add-day-page #itemsContainer {
       display: flex;
       flex-direction: column;
