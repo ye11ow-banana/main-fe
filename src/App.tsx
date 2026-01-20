@@ -62,6 +62,8 @@ function usePathname() {
   return pathname;
 }
 
+import { ThemeProvider } from "./context/ThemeContext";
+
 export default function App() {
   const pathname = usePathname();
   const auth = useAuthState();
@@ -73,46 +75,50 @@ export default function App() {
     return null;
   }
 
-  if (auth.status === "checking") {
-    return null;
-  }
+  const renderContent = () => {
+    if (auth.status === "checking") {
+      return null;
+    }
 
-  // Requirement: Signup page must be the default when user is not authenticated.
-  if (auth.status === "unauthenticated") {
-    if (pathname === "/sign-in" || pathname === "/signin") return <SignIn />;
-    if (pathname === "/sign-up" || pathname === "/signup" || pathname === "/") return <SignUp />;
-    return redirect("/sign-up");
-  }
+    // Requirement: Signup page must be the default when user is not authenticated.
+    if (auth.status === "unauthenticated") {
+      if (pathname === "/sign-in" || pathname === "/signin") return <SignIn />;
+      if (pathname === "/sign-up" || pathname === "/signup" || pathname === "/") return <SignUp />;
+      return redirect("/sign-up");
+    }
 
-  // Authenticated
-  if (!auth.user.is_verified) {
-    // Only verify-email is available.
-    if (pathname === "/verify-email") return <VerifyEmail />;
-    return redirect("/verify-email");
-  }
+    // Authenticated
+    if (!auth.user.is_verified) {
+      // Only verify-email is available.
+      if (pathname === "/verify-email") return <VerifyEmail />;
+      return redirect("/verify-email");
+    }
 
-  // Authenticated + verified
-  if (
-    pathname === "/sign-up" ||
-    pathname === "/signup" ||
-    pathname === "/sign-in" ||
-    pathname === "/signin" ||
-    pathname === "/verify-email"
-  ) {
+    // Authenticated + verified
+    if (
+      pathname === "/sign-up" ||
+      pathname === "/signup" ||
+      pathname === "/sign-in" ||
+      pathname === "/signin" ||
+      pathname === "/verify-email"
+    ) {
+      return redirect("/");
+    }
+
+    // Default signed-in route
+    if (pathname === "/") return <Home user={auth.user} />;
+
+    if (pathname === "/calories" || pathname === "/calories-list") {
+      return <CaloriesList user={auth.user} />;
+    }
+
+    if (pathname === "/add-day") {
+      return <AddDay user={auth.user} />;
+    }
+
+    // Future pages will be added here; for now route unknown paths to home.
     return redirect("/");
-  }
+  };
 
-  // Default signed-in route
-  if (pathname === "/") return <Home user={auth.user} />;
-
-  if (pathname === "/calories" || pathname === "/calories-list") {
-    return <CaloriesList user={auth.user} />;
-  }
-
-  if (pathname === "/add-day") {
-    return <AddDay user={auth.user} />;
-  }
-
-  // Future pages will be added here; for now route unknown paths to home.
-  return redirect("/");
+  return <ThemeProvider>{renderContent()}</ThemeProvider>;
 }

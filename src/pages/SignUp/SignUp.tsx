@@ -48,7 +48,10 @@ function storeToken(tokenType: string, accessToken: string) {
   localStorage.setItem("access_token", authHeaderValue);
 }
 
+import { useTheme } from "../../context/ThemeContext";
+
 export function SignUp() {
+  const { theme, toggleTheme } = useTheme();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,7 +110,28 @@ export function SignUp() {
   }
 
   return (
-    <div className="auth-page theme-light">
+    <div className={`auth-page theme-${theme}`}>
+      <button 
+        className="theme-toggle" 
+        onClick={toggleTheme} 
+        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+        style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '24px',
+          padding: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}
+      >
+        {theme === "light" ? "🌙" : "☀️"}
+      </button>
       <div className="auth-wrapper">
         <div className="auth-card">
           <header className="auth-header">

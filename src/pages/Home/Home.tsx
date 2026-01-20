@@ -22,7 +22,11 @@ function thumbnailStyle(image?: string | null): CSSProperties | undefined {
   };
 }
 
+import { Header } from "../../components/Header/Header";
+import { useTheme } from "../../context/ThemeContext";
+
 export function Home({ user }: { user: UserInfo }) {
+  const { theme } = useTheme();
   const [apps, setApps] = useState<AppDTO[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,41 +108,8 @@ export function Home({ user }: { user: UserInfo }) {
   }, [apps, error, isLoading]);
 
   return (
-    <div className="home-page theme-light">
-      <header className="header">
-        <div className="container header-inner">
-          <div className="header-left">
-            <div className="logo-icon" />
-            <div className="logo-text">ServiceHub</div>
-          </div>
-
-          <div className="header-center">
-            <div className="search">
-              <div className="search-icon" />
-              <input className="search-input" type="text" placeholder="Search services…" />
-            </div>
-          </div>
-
-          <div className="header-right">
-            <button className="icon-button icon-button--search" aria-label="Search">
-              🔍
-            </button>
-            <button className="icon-button icon-button--bell" aria-label="Notifications">
-              <span className="icon-bell" aria-hidden="true" />
-            </button>
-
-            <div className="avatar-block">
-              <img
-                className="avatar-image"
-                src="/profile.webp"
-                alt={`${user.username} profile`}
-                loading="lazy"
-              />
-              <div className="avatar-name">{user.username}</div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className={`home-page theme-${theme}`}>
+      <Header user={user} />
 
       <main className="main">
         <div className="container">

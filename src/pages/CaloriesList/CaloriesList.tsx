@@ -93,7 +93,11 @@ function formatMaybeGrams(v: string | number | null | undefined): string {
   return `${Math.round(n)} g`;
 }
 
+import { Header } from "../../components/Header/Header";
+import { useTheme } from "../../context/ThemeContext";
+
 export function CaloriesList({ user }: { user: UserInfo }) {
+  const { theme } = useTheme();
   const defaultEnd = useMemo(() => toDateInputValue(new Date()), []);
   const defaultStart = useMemo(() => toDateInputValue(addDays(new Date(), -30)), []);
 
@@ -383,46 +387,8 @@ export function CaloriesList({ user }: { user: UserInfo }) {
   }
 
   return (
-    <div className="calories-page theme-light">
-      <header className="header">
-        <div className="container header-inner">
-          <div className="header-left">
-            <div className="logo-icon"></div>
-            <div className="logo-text">ServiceHub</div>
-          </div>
-
-          <div className="header-center">
-            <div className="search">
-              <div className="search-icon"></div>
-              <input
-                className="search-input"
-                type="text"
-                placeholder="Search services…"
-              />
-            </div>
-          </div>
-
-          <div className="header-right">
-            <button className="icon-button icon-button--search" aria-label="Search">
-              🔍
-            </button>
-
-            <button className="icon-button icon-button--bell" aria-label="Notifications">
-              <span className="icon-bell" aria-hidden="true"></span>
-            </button>
-
-            <div className="avatar-block">
-              <img
-                className="avatar-image"
-                src="/profile.webp"
-                alt={`${user.username} profile`}
-                loading="lazy"
-              />
-              <div className="avatar-name">{user.username}</div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className={`calories-page theme-${theme}`}>
+      <Header user={user} />
 
       <main className="main">
         <div className="container">

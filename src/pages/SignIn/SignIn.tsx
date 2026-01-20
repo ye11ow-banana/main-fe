@@ -16,7 +16,10 @@ function validate(values: { username: string; password: string }): {
   return { fieldErrors, formError: null };
 }
 
+import { useTheme } from "../../context/ThemeContext";
+
 export function SignIn() {
+  const { theme, toggleTheme } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -66,7 +69,28 @@ export function SignIn() {
   }
 
   return (
-    <div className="auth-page theme-light">
+    <div className={`auth-page theme-${theme}`}>
+      <button 
+        className="theme-toggle" 
+        onClick={toggleTheme} 
+        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+        style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '24px',
+          padding: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}
+      >
+        {theme === "light" ? "🌙" : "☀️"}
+      </button>
       <div className="auth-wrapper">
         <div className="auth-card">
           <header className="auth-header">
