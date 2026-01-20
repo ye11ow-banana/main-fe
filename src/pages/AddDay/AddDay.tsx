@@ -236,7 +236,7 @@ export function AddDay({ user }: AddDayProps) {
                   <div className="form-body">
                     <div className="field-group">
                       <label className="field-label" htmlFor="image">Image</label>
-                      <span className="field-hint">Optional. Choose an image from your computer.</span>
+                      <span className="field-hint">Choose an image from your computer.</span>
                       <div className="file-input-wrapper">
                         <input id="image" name="image" type="file" className="file-input" accept="image/*" ref={fileInputRef} disabled={hasAnalyzed} onChange={handleImageChange} />
                         <div className="file-visual">
@@ -269,12 +269,12 @@ export function AddDay({ user }: AddDayProps) {
                     </div>
                     <div className="field-group">
                       <label className="field-label" htmlFor="notes">Notes</label>
-                      <span className="field-hint">Short description, meals, comments or anything you want to remember.</span>
+                      <span className="field-hint">A: pizza 30 cm. M: Coca-Cola 1 liter</span>
                       <textarea
                         id="notes"
                         name="notes"
                         className="field-input"
-                        placeholder="For example: gym day, higher protein, dinner out with friends…"
+                        placeholder="A: pizza 30 cm. M: Coca-Cola 1 liter"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         disabled={hasAnalyzed}
