@@ -134,7 +134,7 @@ export function ingestCalorieData(formData: FormData) {
 
 export type DayProductInput = {
   product_id: string;
-  weight: number;
+  weight: string;
 };
 
 export type CreateDayRequest = {

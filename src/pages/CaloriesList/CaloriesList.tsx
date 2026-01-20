@@ -86,7 +86,8 @@ function formatSignedKg(v: string | number | null): string {
 }
 
 function formatMaybeGrams(v: string | number | null | undefined): string {
-  if (v == null) return "—";
+  if (v == null || v === "") return "—";
+  if (typeof v === "string" && v.includes("+")) return `${v} g`;
   const n = toNumber(v);
   if (!Number.isFinite(n) || n <= 0) return "—";
   return `${Math.round(n)} g`;

@@ -13,7 +13,7 @@ interface ReviewItem {
   user: string;
   product_id: string;
   product_name: string;
-  weight: number;
+  weight: string;
 }
 
 export function AddDay({ user }: AddDayProps) {
@@ -81,7 +81,7 @@ export function AddDay({ user }: AddDayProps) {
           user: p.user,
           product_id: p.product_id,
           product_name: p.name,
-          weight: parseInt(p.weight) || 0,
+          weight: p.weight || "0",
         }));
         setReviewItems(items);
       }
@@ -124,7 +124,7 @@ export function AddDay({ user }: AddDayProps) {
         user: defaultUser,
         product_id: "",
         product_name: "",
-        weight: 0,
+        weight: "0",
       },
     ]);
   };
@@ -421,11 +421,11 @@ export function AddDay({ user }: AddDayProps) {
                             />
                             <input
                               className="review-input"
-                              type="number"
+                              type="text"
                               name={`items[${index + 4}][grams]`}
                               value={item.weight}
-                              onChange={(e) => updateItem(item.id, { weight: parseInt(e.target.value) || 0 })}
-                              min="0"
+                              onChange={(e) => updateItem(item.id, { weight: e.target.value })}
+                              placeholder="Grams (e.g. 100+50)"
                             />
                             <button 
                               type="button" 
