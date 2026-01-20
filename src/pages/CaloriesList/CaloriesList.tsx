@@ -625,7 +625,11 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                 <br />
                 <span style={{ fontSize: 12 }}>Tap a row to view detailed products</span>
               </div>
-              <button className="btn-add-day" type="button">
+              <button
+                className="btn-add-day"
+                type="button"
+                onClick={() => (window.location.href = "/add-day")}
+              >
                 + Add day
               </button>
             </div>

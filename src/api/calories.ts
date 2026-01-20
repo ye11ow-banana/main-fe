@@ -108,3 +108,56 @@ export function getCalorieDays(params: CalorieDaysParams) {
     method: "GET",
   });
 }
+
+export type IngestProductMatch = {
+  user: string;
+  product_id: string;
+  name: string;
+  weight: string;
+  matched_score: number;
+};
+
+export type IngestResponse = {
+  products: IngestProductMatch[];
+  warnings: string[];
+  unparsed: string[];
+};
+
+export function ingestCalorieData(formData: FormData) {
+  return authHttp<ResponseDTO<IngestResponse>>("/calorie/ingest", {
+    method: "POST",
+    body: formData,
+    // Note: authHttp in http.ts sets Content-Type: application/json by default.
+    // We need to ensure it doesn't do that for FormData.
+  });
+}
+
+export type DayProductInput = {
+  product_id: string;
+  weight: number;
+};
+
+export type CreateDayRequest = {
+  date: string; // YYYY-MM-DD
+  notes?: string;
+  body_weight?: number;
+  body_fat?: number;
+  products: DayProductInput[];
+};
+
+export function createCalorieDay(body: CreateDayRequest) {
+  return authHttp<ResponseDTO<{ id: string }>>("/calorie/days", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function getProducts(q: string = "", page: number = 1) {
+  const query = new URLSearchParams({
+    q,
+    page: String(page),
+  });
+  return authHttp<ResponseDTO<PaginationDTO<DayProduct>>>(`/calorie/products?${query.toString()}`, {
+    method: "GET",
+  });
+}

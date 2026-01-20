@@ -20,8 +20,9 @@ export async function http<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const isFormData = options.body instanceof FormData;
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    ...(!isFormData ? { "Content-Type": "application/json" } : {}),
     ...(options.headers ?? {}),
   };
 
@@ -40,6 +41,8 @@ export async function http<T>(
 
   return data as T;
 }
+
+(window as any).authHttp = authHttp;
 
 function getAccessTokenHeader(): string | null {
   return localStorage.getItem("access_token");
