@@ -49,6 +49,7 @@ function storeToken(tokenType: string, accessToken: string) {
 }
 
 import { useTheme } from "../../context/ThemeContext";
+import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 export function SignUp() {
   const { theme, toggleTheme } = useTheme();
@@ -111,27 +112,17 @@ export function SignUp() {
 
   return (
     <div className={`auth-page theme-${theme}`}>
-      <button 
-        className="theme-toggle" 
-        onClick={toggleTheme} 
-        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+      <div 
+        className="theme-toggle-wrapper" 
         style={{
           position: 'fixed',
           top: '24px',
           right: '24px',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '24px',
-          padding: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           zIndex: 1000
         }}
       >
-        {theme === "light" ? "🌙" : "☀️"}
-      </button>
+        <ThemeToggle />
+      </div>
       <div className="auth-wrapper">
         <div className="auth-card">
           <header className="auth-header">
