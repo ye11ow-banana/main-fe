@@ -26,6 +26,7 @@ export function AddDay({ user }: AddDayProps) {
   
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal states
@@ -42,6 +43,24 @@ export function AddDay({ user }: AddDayProps) {
       setApps(list);
     });
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+    } else {
+      setImagePreview(null);
+    }
+  };
 
   const handleAnalyze = async () => {
     const file = fileInputRef.current?.files?.[0];
@@ -240,13 +259,19 @@ export function AddDay({ user }: AddDayProps) {
                       <label className="field-label" htmlFor="image">Image</label>
                       <span className="field-hint">Optional. Choose an image from your computer.</span>
                       <div className="file-input-wrapper">
-                        <input id="image" name="image" type="file" className="file-input" accept="image/*" ref={fileInputRef} disabled={hasAnalyzed} />
+                        <input id="image" name="image" type="file" className="file-input" accept="image/*" ref={fileInputRef} disabled={hasAnalyzed} onChange={handleImageChange} />
                         <div className="file-visual">
-                          <div className="file-icon">📷</div>
-                          <div>
-                            <div className="file-text-main">{hasAnalyzed ? "Image uploaded" : "Click to choose image"}</div>
-                            <div className="file-text-sub">JPG, PNG or WEBP, up to 5 MB</div>
-                          </div>
+                          {imagePreview ? (
+                            <img src={imagePreview} alt="Preview" className="image-preview" />
+                          ) : (
+                            <>
+                              <div className="file-icon">📷</div>
+                              <div>
+                                <div className="file-text-main">{hasAnalyzed ? "Image uploaded" : "Click to choose image"}</div>
+                                <div className="file-text-sub">JPG, PNG or WEBP, up to 5 MB</div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
