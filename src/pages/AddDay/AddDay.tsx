@@ -18,6 +18,7 @@ interface ReviewItem {
 
 export function AddDay({ user }: AddDayProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [apps, setApps] = useState<AppDTO[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,6 +57,7 @@ export function AddDay({ user }: AddDayProps) {
 
     try {
       const res = await ingestCalorieData(formData);
+      setHasAnalyzed(true);
       if (res.data && res.data.products) {
         const items: ReviewItem[] = res.data.products.map((p, idx) => ({
           id: `ingest-${idx}-${Date.now()}`,
@@ -215,7 +217,8 @@ export function AddDay({ user }: AddDayProps) {
               <button 
                 className={`progress-step ${currentStep === 2 ? "progress-step--active" : ""}`}
                 type="button"
-                onClick={() => setCurrentStep(2)}
+                onClick={() => hasAnalyzed && setCurrentStep(2)}
+                disabled={!hasAnalyzed}
               >
                 <span className="progress-step-index">2</span>
                 <span>
@@ -237,11 +240,11 @@ export function AddDay({ user }: AddDayProps) {
                       <label className="field-label" htmlFor="image">Image</label>
                       <span className="field-hint">Optional. Choose an image from your computer.</span>
                       <div className="file-input-wrapper">
-                        <input id="image" name="image" type="file" className="file-input" accept="image/*" ref={fileInputRef} />
+                        <input id="image" name="image" type="file" className="file-input" accept="image/*" ref={fileInputRef} disabled={hasAnalyzed} />
                         <div className="file-visual">
                           <div className="file-icon">📷</div>
                           <div>
-                            <div className="file-text-main">Click to choose image</div>
+                            <div className="file-text-main">{hasAnalyzed ? "Image uploaded" : "Click to choose image"}</div>
                             <div className="file-text-sub">JPG, PNG or WEBP, up to 5 MB</div>
                           </div>
                         </div>
@@ -257,6 +260,7 @@ export function AddDay({ user }: AddDayProps) {
                         placeholder="Select day"
                         value={date} 
                         onChange={(e) => setDate(e.target.value)} 
+                        disabled={hasAnalyzed}
                       />
                     </div>
                     <div className="field-group">
@@ -269,6 +273,7 @@ export function AddDay({ user }: AddDayProps) {
                         placeholder="For example: gym day, higher protein, dinner out with friends…"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
+                        disabled={hasAnalyzed}
                       ></textarea>
                     </div>
                   </div>
@@ -279,9 +284,9 @@ export function AddDay({ user }: AddDayProps) {
                       className="btn-primary" 
                       id="primaryAction"
                       onClick={handleAnalyze}
-                      disabled={isAnalyzing}
+                      disabled={isAnalyzing || hasAnalyzed}
                     >
-                      {isAnalyzing ? "Analyzing..." : "Analyze"}
+                      {isAnalyzing ? "Analyzing..." : hasAnalyzed ? "Analyzed" : "Analyze"}
                     </button>
                   </div>
                 </div>
