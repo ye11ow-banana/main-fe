@@ -572,14 +572,25 @@
     }
     .add-day-page .user-modal-list {
       margin-top: 6px;
-      max-height: 260px;
-      overflow: auto;
+      max-height: 480px; /* 10 items * 48px each roughly */
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       gap: 4px;
       padding-right: 2px;
     }
+
+    .add-day-page .user-modal-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .add-day-page .user-modal-list {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
     .add-day-page .user-modal-item {
+      height: 44px; /* fixed height for items */
       border-radius: 12px;
       border: 1px solid transparent;
       padding: 8px 10px;
@@ -592,6 +603,7 @@
       font-size: 14px;
       color: var(--color-text-primary);
       text-align: left;
+      flex-shrink: 0;
     }
     .add-day-page .user-modal-item-avatar {
       width: 30px;

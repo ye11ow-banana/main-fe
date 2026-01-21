@@ -153,13 +153,16 @@ export function AddDay({ user }: AddDayProps) {
     setActiveRowId(id);
     setProductModalOpen(true);
     setProductSearch("");
-    fetchProducts("");
+    // We'll let the useEffect handle the initial fetch
   };
 
   const fetchProducts = async (q: string) => {
     try {
       const res = await getProducts(q);
-      setProducts(res.data.data);
+      // getProducts returns PaginationDTO<DayProduct> which has a 'data' array
+      const productsList = res.data && Array.isArray(res.data.data) ? res.data.data : [];
+      // Limit to 10 products as per requirement
+      setProducts(productsList.slice(0, 10));
     } catch (err) {
       console.error(err);
     }
