@@ -120,7 +120,13 @@
 .product-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
+}
+
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .product-card {
