@@ -2,6 +2,7 @@ import React from "react";
 import { useTheme } from "../../context/ThemeContext";
 import type { UserInfo } from "../../api/auth";
 import { ThemeToggle } from "../ThemeToggle/ThemeToggle";
+import "./Header.css";
 
 interface HeaderProps {
   user: UserInfo;

@@ -22,6 +22,7 @@
   --color-input-bg: #F9FAFB;
   --color-input-border: #E5E7EB;
   --color-input-placeholder: #9CA3AF;
+  --icon-bell: url("/notification-icon-light.png");
 }
 
 .products-page.theme-dark {
@@ -34,6 +35,7 @@
   --color-input-bg: #020617;
   --color-input-border: #1F2937;
   --color-input-placeholder: #6B7280;
+  --icon-bell: url("/notification-icon-dark.png");
 }
 
 .products-page .container {
