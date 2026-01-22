@@ -195,8 +195,10 @@ export function AddDay({ user }: AddDayProps) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
+  const activeRow = reviewItems.find((item) => item.id === activeRowId);
   const filteredUsers = availableUsers.filter((u) =>
-    u.username.toLowerCase().includes(userSearch.toLowerCase())
+    u.username.toLowerCase().includes(userSearch.toLowerCase()) &&
+    u.id !== activeRow?.user_id
   );
 
   return (

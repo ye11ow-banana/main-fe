@@ -147,7 +147,7 @@ export type CreateDayRequest = {
 };
 
 export function createCalorieDay(body: CreateDayRequest) {
-  return authHttp<ResponseDTO<{ id: string }>>("/calorie/add_day", {
+  return authHttp<ResponseDTO<{ id: string }>>("/calorie/days", {
     method: "POST",
     body: JSON.stringify(body),
   });
