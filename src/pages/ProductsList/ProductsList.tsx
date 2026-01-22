@@ -166,9 +166,6 @@ export function ProductsList({ user }: { user: UserInfo }) {
                 <h1 className="page-title">Products</h1>
                 <p className="page-subtitle">Manage your product database</p>
               </div>
-              <button className="btn-primary" onClick={() => handleOpenModal()}>
-                + Add product
-              </button>
             </div>
             
             <div className="filters">
@@ -181,6 +178,9 @@ export function ProductsList({ user }: { user: UserInfo }) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <button className="btn-primary btn-sm" onClick={() => handleOpenModal()}>
+                + Add product
+              </button>
             </div>
           </section>
 

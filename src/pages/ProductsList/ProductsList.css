@@ -83,6 +83,14 @@
   cursor: pointer;
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
   transition: transform 0.2s;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  margin: 0 !important;
+  font-size: 14px;
+  width: 20% !important;
 }
 
 .btn-primary:hover {
@@ -96,9 +104,14 @@
 
 .filters {
   margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .search-bar {
+  flex: 1;
   max-width: 400px;
 }
 
