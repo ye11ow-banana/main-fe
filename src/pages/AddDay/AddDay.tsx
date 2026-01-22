@@ -27,6 +27,7 @@ export function AddDay({ user }: AddDayProps) {
   const [apps, setApps] = useState<AppDTO[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserInfo[]>([]);
   
@@ -77,6 +78,7 @@ export function AddDay({ user }: AddDayProps) {
     }
 
     setIsAnalyzing(true);
+    setError(null);
     const formData = new FormData();
     if (file) formData.append("image", file);
     if (notes) formData.append("description", notes);
@@ -101,7 +103,7 @@ export function AddDay({ user }: AddDayProps) {
       setCurrentStep(2);
     } catch (err) {
       console.error(err);
-      alert("Analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      setError("Analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setIsAnalyzing(false);
     }
@@ -109,6 +111,7 @@ export function AddDay({ user }: AddDayProps) {
 
   const handleSave = async () => {
     setIsSaving(true);
+    setError(null);
     try {
       await createCalorieDay({
         date,
@@ -119,11 +122,10 @@ export function AddDay({ user }: AddDayProps) {
           weight: item.weight
         }))
       });
-      alert("Day record saved successfully!");
       window.location.href = "/calories-list";
     } catch (err) {
       console.error(err);
-      alert("Save failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      setError("Save failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setIsSaving(false);
     }
@@ -296,6 +298,7 @@ export function AddDay({ user }: AddDayProps) {
                         disabled={hasAnalyzed}
                       ></textarea>
                     </div>
+                    {error && <div className="error-message" style={{ color: "red", marginTop: "1rem" }}>{error}</div>}
                   </div>
                   <div className="form-actions">
                     <button type="button" className="btn-ghost" onClick={() => window.location.href = "/calories-list"}>Cancel</button>
@@ -362,6 +365,7 @@ export function AddDay({ user }: AddDayProps) {
                           </div>
                         ))}
                       </div>
+                      {error && <div className="error-message" style={{ color: "red", marginTop: "1rem" }}>{error}</div>}
                     </div>
                     <button type="button" className="btn-add-item" onClick={addItem}>
                       + Add one more item
