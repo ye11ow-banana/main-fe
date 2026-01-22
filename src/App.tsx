@@ -3,6 +3,7 @@ import { ApiError } from "./api/http";
 import { getMe, type UserInfo } from "./api/auth";
 import { Home } from "./pages/Home/Home";
 import { CaloriesList } from "./pages/CaloriesList/CaloriesList";
+import { ProductsList } from "./pages/ProductsList/ProductsList";
 import { AddDay } from "./pages/AddDay/AddDay";
 import { SignIn } from "./pages/SignIn/SignIn";
 import { SignUp } from "./pages/SignUp/SignUp";
@@ -110,6 +111,10 @@ export default function App() {
 
     if (pathname === "/calories" || pathname === "/calories-list") {
       return <CaloriesList user={auth.user} />;
+    }
+
+    if (pathname === "/products" || pathname === "/products-list") {
+      return <ProductsList user={auth.user} />;
     }
 
     if (pathname === "/add-day") {

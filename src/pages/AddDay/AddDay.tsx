@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getUsers, type UserInfo } from "../../api/auth";
 import { getApps, type AppDTO } from "../../api/apps";
-import { ingestCalorieData, createCalorieDay, getProducts, type DayProduct } from "../../api/calories";
+import { ingestCalorieData, createCalorieDay, getProducts, type Product } from "../../api/calories";
 import "./AddDay.css";
 
 interface AddDayProps {
@@ -41,7 +41,7 @@ export function AddDay({ user }: AddDayProps) {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
-  const [products, setProducts] = useState<DayProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export function AddDay({ user }: AddDayProps) {
   const fetchProducts = async (q: string) => {
     try {
       const res = await getProducts(q);
-      // getProducts returns PaginationDTO<DayProduct> which has a 'data' array
+      // getProducts returns PaginationDTO<Product> which has a 'data' array
       const productsList = res.data && Array.isArray(res.data.data) ? res.data.data : [];
       // Limit to 10 products as per requirement
       setProducts(productsList.slice(0, 10));

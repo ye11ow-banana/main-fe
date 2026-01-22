@@ -158,7 +158,45 @@ export function getProducts(q: string = "", page: number = 1) {
     q,
     page: String(page),
   });
-  return authHttp<ResponseDTO<PaginationDTO<DayProduct>>>(`/calorie/products?${query.toString()}`, {
+  return authHttp<ResponseDTO<PaginationDTO<Product>>>(`/calorie/products?${query.toString()}`, {
     method: "GET",
+  });
+}
+
+export type Product = {
+  id: string;
+  name: string;
+  proteins: string | number;
+  fats: string | number;
+  carbs: string | number;
+  calories: string | number;
+  created_at: string;
+};
+
+export type ProductInput = {
+  name: string;
+  proteins: number;
+  fats: number;
+  carbs: number;
+  calories: number;
+};
+
+export function createProduct(body: ProductInput) {
+  return authHttp<ResponseDTO<{ id: string }>>("/calorie/products", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateProduct(id: string, body: ProductInput) {
+  return authHttp<ResponseDTO<{ success: boolean }>>(`/calorie/products/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteProduct(id: string) {
+  return authHttp<ResponseDTO<{ success: boolean }>>(`/calorie/products/${id}`, {
+    method: "DELETE",
   });
 }
