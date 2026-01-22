@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { UserInfo } from "../../api/auth";
+import { getUsers, type UserInfo } from "../../api/auth";
 import { getApps, type AppDTO } from "../../api/apps";
 import { ingestCalorieData, createCalorieDay, getProducts, type DayProduct } from "../../api/calories";
 import "./AddDay.css";
@@ -10,6 +10,7 @@ interface AddDayProps {
 
 interface ReviewItem {
   id: string;
+  user_id: string;
   user: string;
   product_id: string;
   product_name: string;
@@ -27,6 +28,7 @@ export function AddDay({ user }: AddDayProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<UserInfo[]>([]);
   
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
@@ -45,6 +47,9 @@ export function AddDay({ user }: AddDayProps) {
     getApps().then((res) => {
       const list = Array.isArray(res.data) ? res.data : [res.data];
       setApps(list);
+    });
+    getUsers().then((res) => {
+      setAvailableUsers(res.data);
     });
   }, []);
 
@@ -80,13 +85,17 @@ export function AddDay({ user }: AddDayProps) {
       const res = await ingestCalorieData(formData);
       setHasAnalyzed(true);
       if (res.data && res.data.products) {
-        const items: ReviewItem[] = res.data.products.map((p, idx) => ({
-          id: `ingest-${idx}-${Date.now()}`,
-          user: p.user,
-          product_id: p.product_id,
-          product_name: p.name,
-          weight: p.weight || "0",
-        }));
+        const items: ReviewItem[] = res.data.products.map((p, idx) => {
+          const matchedUser = availableUsers.find(u => u.username.toLowerCase() === p.user.toLowerCase());
+          return {
+            id: `ingest-${idx}-${Date.now()}`,
+            user_id: matchedUser?.id || "",
+            user: p.user,
+            product_id: p.product_id,
+            product_name: p.name,
+            weight: p.weight || "0",
+          };
+        });
         setReviewItems(items);
       }
       setCurrentStep(2);
@@ -105,12 +114,13 @@ export function AddDay({ user }: AddDayProps) {
         date,
         notes,
         products: reviewItems.map(item => ({
+          user_id: item.user_id,
           product_id: item.product_id,
           weight: item.weight
         }))
       });
       alert("Day record saved successfully!");
-      window.location.href = "/calories";
+      window.location.href = "/calories-list";
     } catch (err) {
       console.error(err);
       alert("Save failed: " + (err instanceof Error ? err.message : "Unknown error"));
@@ -120,12 +130,13 @@ export function AddDay({ user }: AddDayProps) {
   };
 
   const addItem = () => {
-    const defaultUser = apps[0]?.name || "Breakfast";
+    const defaultUser = availableUsers[0];
     setReviewItems([
       ...reviewItems,
       {
         id: `manual-${Date.now()}`,
-        user: defaultUser,
+        user_id: defaultUser?.id || "",
+        user: defaultUser?.username || "Select User",
         product_id: "",
         product_name: "",
         weight: "0",
@@ -184,8 +195,8 @@ export function AddDay({ user }: AddDayProps) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
-  const filteredUsers = apps.filter((u) =>
-    u.name.toLowerCase().includes(userSearch.toLowerCase())
+  const filteredUsers = availableUsers.filter((u) =>
+    u.username.toLowerCase().includes(userSearch.toLowerCase())
   );
 
   return (
@@ -285,7 +296,7 @@ export function AddDay({ user }: AddDayProps) {
                     </div>
                   </div>
                   <div className="form-actions">
-                    <button type="button" className="btn-ghost" onClick={() => window.location.href = "/calories"}>Cancel</button>
+                    <button type="button" className="btn-ghost" onClick={() => window.location.href = "/calories-list"}>Cancel</button>
                     <button 
                       type="button" 
                       className="btn-primary" 
@@ -312,78 +323,6 @@ export function AddDay({ user }: AddDayProps) {
                         <span></span>
                       </div>
                       <div id="itemsContainer">
-                        {reviewItems.length === 0 && (
-                          <>
-                            <div className="review-row">
-                              <button 
-                                type="button" 
-                                className="review-user" 
-                                data-user-name="Breakfast"
-                                onClick={() => alert("Please use 'Add one more item' or 'Analyze' to add items")}
-                              >
-                                <span className="review-avatar">B</span>
-                              </button>
-                              <input
-                                className="review-input"
-                                type="text"
-                                name="items[1][product]"
-                                value="Oatmeal with berries"
-                                readOnly
-                              />
-                              <input
-                                className="review-input"
-                                type="number"
-                                name="items[1][grams]"
-                                value="320"
-                                readOnly
-                              />
-                              <button type="button" className="btn-delete-item" aria-label="Delete item">✕</button>
-                              <input type="hidden" name="items[1][name]" value="Breakfast" />
-                            </div>
-                            <div className="review-row">
-                              <button type="button" className="review-user" data-user-name="Lunch">
-                                <span className="review-avatar">L</span>
-                              </button>
-                              <input
-                                className="review-input"
-                                type="text"
-                                name="items[2][product]"
-                                value="Chicken breast & rice"
-                                readOnly
-                              />
-                              <input
-                                className="review-input"
-                                type="number"
-                                name="items[2][grams]"
-                                value="280"
-                                readOnly
-                              />
-                              <button type="button" className="btn-delete-item" aria-label="Delete item">✕</button>
-                              <input type="hidden" name="items[2][name]" value="Lunch" />
-                            </div>
-                            <div className="review-row">
-                              <button type="button" className="review-user" data-user-name="Dinner">
-                                <span className="review-avatar">D</span>
-                              </button>
-                              <input
-                                className="review-input"
-                                type="text"
-                                name="items[3][product]"
-                                value="Salad & yogurt"
-                                readOnly
-                              />
-                              <input
-                                className="review-input"
-                                type="number"
-                                name="items[3][grams]"
-                                value="250"
-                                readOnly
-                              />
-                              <button type="button" className="btn-delete-item" aria-label="Delete item">✕</button>
-                              <input type="hidden" name="items[3][name]" value="Dinner" />
-                            </div>
-                          </>
-                        )}
                         {reviewItems.map((item, index) => (
                           <div key={item.id} className="review-row">
                             <button 
@@ -449,14 +388,14 @@ export function AddDay({ user }: AddDayProps) {
       <div className={`user-modal-backdrop ${userModalOpen ? "is-open" : ""}`} onClick={() => setUserModalOpen(false)}>
         <div className="user-modal" onClick={(e) => e.stopPropagation()}>
           <div className="user-modal-header">
-            <h3 className="user-modal-title">Select category</h3>
+            <h3 className="user-modal-title">Select User</h3>
             <button type="button" className="user-modal-close" onClick={() => setUserModalOpen(false)}>✕</button>
           </div>
           <div className="user-modal-search">
             <input
               type="text"
               className="user-modal-search-input"
-              placeholder="Search category…"
+              placeholder="Search user…"
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
             />
@@ -468,16 +407,16 @@ export function AddDay({ user }: AddDayProps) {
                 type="button"
                 className="user-modal-item"
                 onClick={() => {
-                  if (activeRowId) updateItem(activeRowId, { user: u.name });
+                  if (activeRowId) updateItem(activeRowId, { user_id: u.id, user: u.username });
                   setUserModalOpen(false);
                 }}
               >
-                <span className="user-modal-item-avatar">{getInitials(u.name)}</span>
-                <span className="user-modal-item-name">{u.name}</span>
+                <span className="user-modal-item-avatar">{getInitials(u.username)}</span>
+                <span className="user-modal-item-name">{u.username}</span>
               </button>
             ))}
           </div>
-          {filteredUsers.length === 0 && <div className="user-modal-empty">No categories found.</div>}
+          {filteredUsers.length === 0 && <div className="user-modal-empty">No users found.</div>}
         </div>
       </div>
 

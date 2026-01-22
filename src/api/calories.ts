@@ -133,6 +133,7 @@ export function ingestCalorieData(formData: FormData) {
 }
 
 export type DayProductInput = {
+  user_id: string;
   product_id: string;
   weight: string;
 };
@@ -146,7 +147,7 @@ export type CreateDayRequest = {
 };
 
 export function createCalorieDay(body: CreateDayRequest) {
-  return authHttp<ResponseDTO<{ id: string }>>("/calorie/days", {
+  return authHttp<ResponseDTO<{ id: string }>>("/calorie/add_day", {
     method: "POST",
     body: JSON.stringify(body),
   });

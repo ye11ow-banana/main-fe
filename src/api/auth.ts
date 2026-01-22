@@ -58,6 +58,12 @@ export function getMe() {
   });
 }
 
+export function getUsers() {
+  return authHttp<ResponseDTO<UserInfo[]>>("/auth/users", {
+    method: "GET",
+  });
+}
+
 export function signUp(body: SignUpRequest) {
   return http<ResponseDTO<UserInfo>>("/auth/sign-up", {
     method: "POST",
