@@ -204,28 +204,37 @@ export function ProductsList({ user }: { user: UserInfo }) {
                 <div className="empty">No products found.</div>
               )}
               
-              {!isLoading && !error && products.map((product) => (
-                <div key={product.id} className="product-card">
-                  <div className="product-info">
-                    <div className="product-name">{product.name}</div>
-                    <div className="product-stats">
-                      <span className="stat">P: {Math.round(toNumber(product.proteins))}g</span>
-                      <span className="stat">F: {Math.round(toNumber(product.fats))}g</span>
-                      <span className="stat">C: {Math.round(toNumber(product.carbs))}g</span>
-                      <span className="stat-kcal">{Math.round(toNumber(product.calories))} kcal</span>
-                      <span className="per-100">per 100g</span>
+              {!isLoading && !error && products.map((product) => {
+                const createdAt = new Date(product.created_at);
+                const today = new Date();
+                const isToday = 
+                  createdAt.getDate() === today.getDate() &&
+                  createdAt.getMonth() === today.getMonth() &&
+                  createdAt.getFullYear() === today.getFullYear();
+
+                return (
+                  <div key={product.id} className={`product-card ${isToday ? 'product-card--today' : ''}`}>
+                    <div className="product-info">
+                      <div className="product-name">{product.name}</div>
+                      <div className="product-stats">
+                        <span className="stat">P: {Math.round(toNumber(product.proteins))}g</span>
+                        <span className="stat">F: {Math.round(toNumber(product.fats))}g</span>
+                        <span className="stat">C: {Math.round(toNumber(product.carbs))}g</span>
+                        <span className="stat-kcal">{Math.round(toNumber(product.calories))} kcal</span>
+                        <span className="per-100">per 100g</span>
+                      </div>
+                    </div>
+                    <div className="product-actions">
+                      <button className="btn-icon" onClick={() => handleOpenModal(product)} title="Edit">
+                        ✎
+                      </button>
+                      <button className="btn-icon btn-icon--delete" onClick={() => handleDelete(product)} title="Delete">
+                        ✕
+                      </button>
                     </div>
                   </div>
-                  <div className="product-actions">
-                    <button className="btn-icon" onClick={() => handleOpenModal(product)} title="Edit">
-                      ✎
-                    </button>
-                    <button className="btn-icon btn-icon--delete" onClick={() => handleDelete(product)} title="Delete">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {pageCount > 1 && (

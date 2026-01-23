@@ -189,6 +189,12 @@
   align-items: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   border: 1px solid var(--color-border-subtle);
+  transition: border-color 0.2s;
+}
+
+.product-card--today {
+  border-color: #10B981; /* green-500 */
+  border-width: 2px;
 }
 
 @media (max-width: 480px) {
