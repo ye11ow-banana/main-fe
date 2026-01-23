@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
             <div className="avatar-block" onClick={toggleDropdown} role="button" aria-haspopup="true" aria-expanded={isDropdownOpen}>
               <img
                 className="avatar-image"
-                src="/profile.webp"
+                src={user.avatar_url || "/profile.webp"}
                 alt={`${user.username} profile`}
                 loading="lazy"
               />

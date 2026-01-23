@@ -50,6 +50,7 @@ export type UserInfo = {
   email: string;
   is_verified: boolean;
   created_at: string;
+  avatar_url: string | null;
 };
 
 export function getMe() {
