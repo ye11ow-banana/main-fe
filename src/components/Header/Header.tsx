@@ -14,10 +14,10 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
   return (
     <header className="header">
       <div className="container header-inner">
-        <div className="header-left">
+        <a href="/" className="header-left" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="logo-icon" />
           <div className="logo-text">ServiceHub</div>
-        </div>
+        </a>
 
         <div className="header-center">
           <div className="search">
