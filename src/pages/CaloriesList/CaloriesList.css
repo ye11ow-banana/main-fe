@@ -65,6 +65,7 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 20px;
+  margin-left: 0;
 }
 
 .calories-page .page-title {
