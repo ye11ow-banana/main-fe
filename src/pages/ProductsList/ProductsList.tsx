@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import type { UserInfo } from "../../api/auth";
 import { ApiError } from "../../api/http";
 import {
@@ -18,9 +18,6 @@ function toNumber(value: string | number): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
-}
 
 export function ProductsList({ user }: { user: UserInfo }) {
   const { theme } = useTheme();
@@ -38,6 +35,11 @@ export function ProductsList({ user }: { user: UserInfo }) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [formData, setFormData] = useState<ProductInput>({
     name: "",
@@ -127,14 +129,24 @@ export function ProductsList({ user }: { user: UserInfo }) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
-    
+  const handleDelete = (product: Product) => {
+    setProductToDelete(product);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await deleteProduct(id);
+      await deleteProduct(productToDelete.id);
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
       loadProducts();
     } catch (err) {
       alert(err instanceof ApiError ? err.message : "Failed to delete product");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -208,7 +220,7 @@ export function ProductsList({ user }: { user: UserInfo }) {
                     <button className="btn-icon" onClick={() => handleOpenModal(product)} title="Edit">
                       ✎
                     </button>
-                    <button className="btn-icon btn-icon--delete" onClick={() => handleDelete(product.id)} title="Delete">
+                    <button className="btn-icon btn-icon--delete" onClick={() => handleDelete(product)} title="Delete">
                       ✕
                     </button>
                   </div>
@@ -301,6 +313,35 @@ export function ProductsList({ user }: { user: UserInfo }) {
               <button className="btn-ghost" onClick={handleCloseModal}>Cancel</button>
               <button className="btn-primary" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="modal-backdrop" onClick={() => setDeleteModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete Product</h3>
+              <button className="btn-close" onClick={() => setDeleteModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete <strong>{productToDelete?.name}</strong>?</p>
+              <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '8px' }}>
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={() => setDeleteModalOpen(false)}>Cancel</button>
+              <button 
+                className="btn-primary" 
+                onClick={confirmDelete} 
+                disabled={isDeleting}
+                style={{ background: '#DC2626', boxShadow: '0 10px 20px rgba(220, 38, 38, 0.2)' }}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
