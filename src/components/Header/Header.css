@@ -27,7 +27,9 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--color-primary);
+  background-image: url("/icon.png");
+  background-size: cover;
+  background-position: center;
 }
 
 .logo-text {
