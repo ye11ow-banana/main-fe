@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
       <div className="container header-inner">
         <a href="/" className="header-left" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="logo-icon" />
-          <div className="logo-text">ServiceHub</div>
+          <div className="logo-text">Cube</div>
         </a>
 
         <div className="header-center">

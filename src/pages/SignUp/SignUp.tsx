@@ -129,7 +129,7 @@ export function SignUp() {
             <div className="auth-logo" />
             <div>
               <h1 className="auth-heading">Sign up</h1>
-              <p className="auth-subtitle">Create a new ServiceHub account.</p>
+              <p className="auth-subtitle">Create a new Cube account.</p>
             </div>
           </header>
 

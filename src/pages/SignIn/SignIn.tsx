@@ -88,7 +88,7 @@ export function SignIn() {
             <div className="auth-logo" />
             <div>
               <h1 className="auth-heading">Sign in</h1>
-              <p className="auth-subtitle">Sign in to your ServiceHub account.</p>
+              <p className="auth-subtitle">Sign in to your Cube account.</p>
             </div>
           </header>
 
