@@ -27,6 +27,9 @@ export const Profile: React.FC<ProfileProps> = ({ user: initialUser }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const previewUrl = URL.createObjectURL(file);
+    setUser(prev => ({ ...prev, avatar_url: previewUrl }));
+
     setIsUploading(true);
     setError(null);
 
@@ -34,10 +37,14 @@ export const Profile: React.FC<ProfileProps> = ({ user: initialUser }) => {
       await updateAvatar(file);
       const res = await getMe();
       setUser(res.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to update avatar");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update avatar");
+      // Revert to original if possible or refetch
+      const res = await getMe();
+      setUser(res.data);
     } finally {
       setIsUploading(false);
+      URL.revokeObjectURL(previewUrl);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -46,7 +53,6 @@ export const Profile: React.FC<ProfileProps> = ({ user: initialUser }) => {
 
   const handleDeleteAvatar = async () => {
     if (!user.avatar_url) return;
-    if (!confirm("Are you sure you want to delete your avatar?")) return;
 
     setIsUploading(true);
     setError(null);
@@ -55,8 +61,8 @@ export const Profile: React.FC<ProfileProps> = ({ user: initialUser }) => {
       await deleteAvatar();
       const res = await getMe();
       setUser(res.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete avatar");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete avatar");
     } finally {
       setIsUploading(false);
     }
