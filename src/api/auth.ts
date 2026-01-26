@@ -84,3 +84,19 @@ export function verifyEmail(body: { code: number }) {
     body: JSON.stringify(body),
   });
 }
+
+export function updateAvatar(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return authHttp<ResponseDTO<UserInfo>>("/auth/avatar", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export function deleteAvatar() {
+  return authHttp<ResponseDTO<UserInfo>>("/auth/avatar", {
+    method: "DELETE",
+  });
+}

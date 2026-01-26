@@ -21,6 +21,8 @@
 .header-left {
   flex: 0 0 auto;
   gap: 8px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .logo-icon {
@@ -49,17 +51,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-header);
-  border-radius: var(--radius-pill);
+  background: var(--color-input-bg, #f9fafb);
+  border-radius: 999px;
   border: 1px solid var(--color-border-subtle);
-  padding: 8px 14px;
+  padding: 10px 20px;
 }
 
 .header .search-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 999px;
-  border: 2px solid var(--color-search-placeholder, var(--color-input-placeholder));
+  border: 1.5px solid var(--color-search-placeholder, var(--color-input-placeholder));
   position: relative;
   flex-shrink: 0;
 }
@@ -67,11 +69,11 @@
 .header .search-icon::after {
   content: "";
   position: absolute;
-  width: 8px;
-  height: 2px;
+  width: 6px;
+  height: 1.5px;
   border-radius: 999px;
   background: var(--color-search-placeholder, var(--color-input-placeholder));
-  right: -4px;
+  right: -3px;
   bottom: -1px;
   transform: rotate(45deg);
 }
@@ -152,6 +154,9 @@
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.2s;
+  text-decoration: none;
+  display: block;
+  box-sizing: border-box;
 }
 
 .dropdown-item:hover {

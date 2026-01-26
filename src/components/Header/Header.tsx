@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
   return (
     <header className="header">
       <div className="container header-inner">
-        <a href="/" className="header-left" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <a href="/" className="header-left">
           <div className="logo-icon" />
           <div className="logo-text">Cube</div>
         </a>
@@ -73,6 +73,9 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
             {isDropdownOpen && (
               <div className="avatar-dropdown">
+                <a href="/profile" className="dropdown-item">
+                  Profile
+                </a>
                 <button className="dropdown-item" onClick={handleSignOut}>
                   Sign Out
                 </button>

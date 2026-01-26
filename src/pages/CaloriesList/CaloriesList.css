@@ -6,14 +6,11 @@
   --radius-pill: 9999px;
   --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
   --shadow-sm: 0 10px 25px rgba(15, 23, 42, 0.08);
-  --font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
 
   margin: 0;
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: var(--font-family);
 }
 
 .calories-page.theme-light {
