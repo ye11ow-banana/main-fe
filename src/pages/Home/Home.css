@@ -56,17 +56,17 @@
   padding: 40px 0 64px;
 }
 
-.page-header {
+.home-page .page-header {
   margin: 0 0 22px;
 }
 
-.page-title {
+.home-page .page-title {
   font-size: 28px;
   letter-spacing: -0.02em;
   margin: 0;
 }
 
-.page-subtitle {
+.home-page .page-subtitle {
   margin: 8px 0 0;
   color: var(--color-text-secondary);
   font-size: 14px;
@@ -164,7 +164,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .page-title {
+  .home-page .page-title {
     font-size: 24px;
   }
 }

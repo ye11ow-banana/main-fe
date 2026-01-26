@@ -54,21 +54,21 @@
   padding-bottom: 40px;
 }
 
-.page-header {
+.products-page .page-header {
   margin-bottom: 24px;
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.page-header-top {
+.products-page .page-header-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
 }
 
-.page-title {
+.products-page .page-title {
   font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -76,12 +76,12 @@
 }
 
 @media (max-width: 768px) {
-  .page-title {
+  .products-page .page-title {
     font-size: 24px;
   }
 }
 
-.page-subtitle {
+.products-page .page-subtitle {
   font-size: 14px;
   color: var(--color-text-secondary);
   margin: 4px 0 0;
