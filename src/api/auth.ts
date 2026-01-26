@@ -85,18 +85,22 @@ export function verifyEmail(body: { code: number }) {
   });
 }
 
+export type SuccessDTO = {
+  success?: boolean;
+};
+
 export function updateAvatar(file: File) {
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("avatar", file);
 
-  return authHttp<ResponseDTO<UserInfo>>("/auth/avatar", {
+  return authHttp<ResponseDTO<SuccessDTO>>("/auth/avatar", {
     method: "POST",
     body: formData,
   });
 }
 
 export function deleteAvatar() {
-  return authHttp<ResponseDTO<UserInfo>>("/auth/avatar", {
+  return authHttp<ResponseDTO<SuccessDTO>>("/auth/avatar", {
     method: "DELETE",
   });
 }

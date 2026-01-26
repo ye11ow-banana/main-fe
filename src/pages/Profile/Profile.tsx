@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import type { UserInfo } from "../../api/auth";
-import { updateAvatar, deleteAvatar } from "../../api/auth";
+import { updateAvatar, deleteAvatar, getMe } from "../../api/auth";
 import { Header } from "../../components/Header/Header";
 import { useTheme } from "../../context/ThemeContext";
 import "./Profile.css";
@@ -31,7 +31,8 @@ export const Profile: React.FC<ProfileProps> = ({ user: initialUser }) => {
     setError(null);
 
     try {
-      const res = await updateAvatar(file);
+      await updateAvatar(file);
+      const res = await getMe();
       setUser(res.data);
     } catch (err: any) {
       setError(err.message || "Failed to update avatar");
@@ -51,7 +52,8 @@ export const Profile: React.FC<ProfileProps> = ({ user: initialUser }) => {
     setError(null);
 
     try {
-      const res = await deleteAvatar();
+      await deleteAvatar();
+      const res = await getMe();
       setUser(res.data);
     } catch (err: any) {
       setError(err.message || "Failed to delete avatar");
