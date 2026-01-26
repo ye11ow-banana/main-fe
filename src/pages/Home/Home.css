@@ -23,6 +23,7 @@
   --color-text-secondary: #9ca3af;
   --color-input-bg: #020617;
   --color-search-placeholder: #6b7280;
+  --color-bg-hover: rgba(255, 255, 255, 0.05);
   --color-status-active-bg: rgba(34, 197, 94, 0.12);
   --color-status-active-text: #4ade80;
   --color-status-inactive-bg: rgba(148, 163, 184, 0.25);

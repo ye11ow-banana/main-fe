@@ -26,6 +26,7 @@
       --color-input-border: #1F2937;
       --color-input-placeholder: #6B7280;
       --color-modal-bg: #111827;
+      --color-bg-hover: rgba(255, 255, 255, 0.05);
       --icon-bell: url("/notification-icon-dark.png");
     }
 
