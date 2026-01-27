@@ -119,7 +119,37 @@ async function refreshAccessToken(): Promise<void> {
  * - On 401, attempts a single refresh-token flow and retries once.
  * - If refresh fails/expired, clears session and redirects to /sign-in.
  */
+const inflightRequests = new Map<string, Promise<any>>();
+
 export async function authHttp<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const isSafeMethod = !options.method || options.method === "GET";
+
+  if (isSafeMethod) {
+    const key = `${path}:${JSON.stringify(options.headers || {})}`;
+    const existing = inflightRequests.get(key);
+    if (existing) {
+      return existing;
+    }
+
+    const promise = (async () => {
+      try {
+        return await _authHttpInternal<T>(path, options);
+      } finally {
+        inflightRequests.delete(key);
+      }
+    })();
+
+    inflightRequests.set(key, promise);
+    return promise;
+  }
+
+  return _authHttpInternal<T>(path, options);
+}
+
+async function _authHttpInternal<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
