@@ -141,10 +141,7 @@ export type DayProductInput = {
 
 export type CreateDayRequest = {
   date: string; // YYYY-MM-DD
-  notes?: string;
-  body_weight?: number;
-  body_fat?: number;
-  additional_calories?: number;
+  user_additional_calories: Record<string, number>; // user_id -> additional_calories
   products: DayProductInput[];
 };
 

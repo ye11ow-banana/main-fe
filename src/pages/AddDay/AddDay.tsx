@@ -31,8 +31,9 @@ export function AddDay({ user }: AddDayProps) {
   
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
-  const [additionalCalories, setAdditionalCalories] = useState("");
+  const [userAdditionalCalories, setUserAdditionalCalories] = useState<Record<string, string>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [visitedStep2, setVisitedStep2] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal states
@@ -68,6 +69,7 @@ export function AddDay({ user }: AddDayProps) {
   const handleAnalyze = async () => {
     const file = fileInputRef.current?.files?.[0];
     if (!file && !notes) {
+      setVisitedStep2(true);
       setCurrentStep(2);
       return;
     }
@@ -81,6 +83,7 @@ export function AddDay({ user }: AddDayProps) {
     try {
       const res = await ingestCalorieData(formData);
       setHasAnalyzed(true);
+      setVisitedStep2(true);
       if (res.data && res.data.products) {
         const items: ReviewItem[] = res.data.products.map((p, idx) => {
           const matchedUser = availableUsers.find(u => u.username.toLowerCase() === p.user.toLowerCase());
@@ -107,11 +110,19 @@ export function AddDay({ user }: AddDayProps) {
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
+
+    const formattedAdditionalCalories: Record<string, number> = {};
+    Object.entries(userAdditionalCalories).forEach(([userId, val]) => {
+      const num = parseFloat(val);
+      if (!isNaN(num)) {
+        formattedAdditionalCalories[userId] = num;
+      }
+    });
+
     try {
       await createCalorieDay({
         date,
-        notes,
-        additional_calories: additionalCalories ? parseFloat(additionalCalories) : 0,
+        user_additional_calories: formattedAdditionalCalories,
         products: reviewItems.map(item => ({
           user_id: item.user_id,
           product_id: item.product_id,
@@ -186,18 +197,27 @@ export function AddDay({ user }: AddDayProps) {
     }
   }, [productSearch, productModalOpen]);
 
-  const getInitials = (name: string) => {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 0) return "?";
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  };
 
   const activeRow = reviewItems.find((item) => item.id === activeRowId);
   const filteredUsers = availableUsers.filter((u) =>
     u.username.toLowerCase().includes(userSearch.toLowerCase()) &&
     u.id !== activeRow?.user_id
   );
+
+
+  const UserAvatar = ({ user, style }: { user: UserInfo | { username: string, avatar_url?: string | null }, style?: React.CSSProperties }) => {
+    if (user.avatar_url) {
+      return <img src={user.avatar_url} alt={user.username} className="review-avatar" style={{ objectFit: "cover", ...style }} />;
+    }
+    return (
+      <div className="review-avatar" style={{ background: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", ...style }}>
+        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "60%", height: "60%" }}>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+    );
+  };
 
   return (
     <div className={`add-day-page theme-${theme}`}>
@@ -229,8 +249,8 @@ export function AddDay({ user }: AddDayProps) {
               <button 
                 className={`progress-step ${currentStep === 2 ? "progress-step--active" : ""}`}
                 type="button"
-                onClick={() => hasAnalyzed && setCurrentStep(2)}
-                disabled={!hasAnalyzed}
+                onClick={() => visitedStep2 && setCurrentStep(2)}
+                disabled={!visitedStep2}
               >
                 <span className="progress-step-index">2</span>
                 <span>
@@ -282,20 +302,6 @@ export function AddDay({ user }: AddDayProps) {
                       />
                     </div>
                     <div className="field-group">
-                      <label className="field-label" htmlFor="additionalCalories">Additional calories</label>
-                      <span className="field-hint">Extra calories to add to this day (e.g. from snacks)</span>
-                      <input
-                        id="additionalCalories"
-                        name="additionalCalories"
-                        type="number"
-                        className="field-input"
-                        placeholder="e.g. 200"
-                        value={additionalCalories}
-                        onChange={(e) => setAdditionalCalories(e.target.value)}
-                        disabled={hasAnalyzed}
-                      />
-                    </div>
-                    <div className="field-group">
                       <label className="field-label" htmlFor="notes">Notes</label>
                       <span className="field-hint">A: pizza 30 cm. M: Coca-Cola 1 liter</span>
                       <textarea
@@ -338,48 +344,79 @@ export function AddDay({ user }: AddDayProps) {
                         <span></span>
                       </div>
                       <div id="itemsContainer">
-                        {reviewItems.map((item, index) => (
-                          <div key={item.id} className="review-row">
-                            <button 
-                              type="button" 
-                              className="review-user" 
-                              data-user-name={item.user}
-                              onClick={() => openUserPicker(item.id)}
-                            >
-                              <span className="review-avatar">{getInitials(item.user)}</span>
-                            </button>
-                            <input
-                              className="review-input"
-                              type="text"
-                              name={`items[${index + 4}][product]`}
-                              value={item.product_name}
-                              readOnly
-                              placeholder="Select product"
-                              onClick={() => openProductPicker(item.id)}
-                            />
-                            <input
-                              className="review-input"
-                              type="text"
-                              name={`items[${index + 4}][grams]`}
-                              value={item.weight}
-                              onChange={(e) => updateItem(item.id, { weight: e.target.value })}
-                              placeholder="Grams (e.g. 100+50)"
-                            />
-                            <button 
-                              type="button" 
-                              className="btn-delete-item" 
-                              aria-label="Delete item"
-                              onClick={() => deleteItem(item.id)}
-                            >✕</button>
-                            <input type="hidden" name={`items[${index + 4}][name]`} value={item.user} />
-                          </div>
-                        ))}
+                        {reviewItems.map((item, index) => {
+                          const itemUser = availableUsers.find(u => u.id === item.user_id);
+                          return (
+                            <div key={item.id} className="review-row">
+                              <button 
+                                type="button" 
+                                className="review-user" 
+                                data-user-name={item.user}
+                                onClick={() => openUserPicker(item.id)}
+                              >
+                                <UserAvatar user={itemUser || { username: item.user }} />
+                              </button>
+                              <input
+                                className="review-input"
+                                type="text"
+                                name={`items[${index + 4}][product]`}
+                                value={item.product_name}
+                                readOnly
+                                placeholder="Select product"
+                                onClick={() => openProductPicker(item.id)}
+                              />
+                              <input
+                                className="review-input"
+                                type="text"
+                                name={`items[${index + 4}][grams]`}
+                                value={item.weight}
+                                onChange={(e) => updateItem(item.id, { weight: e.target.value })}
+                                placeholder="Grams (e.g. 100+50)"
+                              />
+                              <button 
+                                type="button" 
+                                className="btn-delete-item" 
+                                aria-label="Delete item"
+                                onClick={() => deleteItem(item.id)}
+                              >✕</button>
+                              <input type="hidden" name={`items[${index + 4}][name]`} value={item.user} />
+                            </div>
+                          );
+                        })}
                       </div>
                       {error && <div className="error-message" style={{ color: "red", marginTop: "1rem" }}>{error}</div>}
                     </div>
                     <button type="button" className="btn-add-item" onClick={addItem}>
                       + Add one more item
                     </button>
+
+                    {availableUsers.length > 0 && (
+                      <div className="additional-calories-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
+                        <h3 className="step-section-title" style={{ fontSize: "16px" }}>Additional calories</h3>
+                        <p className="form-description">Add extra calories per user (e.g. from snacks).</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+                          {availableUsers.map(u => {
+                            const userId = u.id;
+                            return (
+                              <div key={userId} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1" }}>
+                                  <UserAvatar user={u} style={{ width: "24px", height: "24px", fontSize: "10px" }} />
+                                  <span style={{ fontSize: "14px" }}>{u.username}</span>
+                                </div>
+                                <input
+                                  className="review-input"
+                                  style={{ width: "120px" }}
+                                  type="number"
+                                  placeholder="e.g. 200"
+                                  value={userAdditionalCalories[userId] || ""}
+                                  onChange={(e) => setUserAdditionalCalories({ ...userAdditionalCalories, [userId]: e.target.value })}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="form-actions">
                     <button type="button" className="btn-ghost" id="backToStep1" onClick={() => setCurrentStep(1)}>Back</button>
@@ -427,7 +464,7 @@ export function AddDay({ user }: AddDayProps) {
                   setUserModalOpen(false);
                 }}
               >
-                <span className="user-modal-item-avatar">{getInitials(u.username)}</span>
+                <UserAvatar user={u} style={{ width: "30px", height: "30px", fontSize: "13px", fontWeight: "600" }} />
                 <span className="user-modal-item-name">{u.username}</span>
               </button>
             ))}

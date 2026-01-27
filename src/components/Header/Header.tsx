@@ -35,6 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     };
   }, []);
 
+
   return (
     <header className="header">
       <div className="container header-inner">
@@ -62,12 +63,27 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
           <div className="avatar-container" ref={dropdownRef}>
             <div className="avatar-block" onClick={toggleDropdown} role="button" aria-haspopup="true" aria-expanded={isDropdownOpen}>
-              <img
-                className="avatar-image"
-                src={user.avatar_url || "/profile.webp"}
-                alt={`${user.username} profile`}
-                loading="lazy"
-              />
+              {user.avatar_url ? (
+                <img
+                  className="avatar-image"
+                  src={user.avatar_url}
+                  alt={`${user.username} profile`}
+                  loading="lazy"
+                />
+              ) : (
+                <div className="avatar-image initials-avatar" style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  background: "var(--color-primary)", 
+                  color: "#fff"
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+              )}
               <div className="avatar-name">{user.username}</div>
             </div>
 
