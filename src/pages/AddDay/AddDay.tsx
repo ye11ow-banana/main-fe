@@ -18,6 +18,21 @@ interface ReviewItem {
 
 import { Header } from "../../components/Header/Header";
 import { useTheme } from "../../context/ThemeContext";
+import React from "react";
+
+const UserAvatar = React.memo(({ user, style }: { user: UserInfo | { username: string, avatar_url?: string | null }, style?: React.CSSProperties }) => {
+  if (user.avatar_url) {
+    return <img src={user.avatar_url} alt={user.username} className="review-avatar" style={{ objectFit: "cover", ...style }} />;
+  }
+  return (
+    <div className="review-avatar" style={{ background: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", ...style }}>
+      <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "60%", height: "60%" }}>
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+  );
+});
 
 export function AddDay({ user }: AddDayProps) {
   const { theme } = useTheme();
@@ -203,21 +218,6 @@ export function AddDay({ user }: AddDayProps) {
     u.username.toLowerCase().includes(userSearch.toLowerCase()) &&
     u.id !== activeRow?.user_id
   );
-
-
-  const UserAvatar = ({ user, style }: { user: UserInfo | { username: string, avatar_url?: string | null }, style?: React.CSSProperties }) => {
-    if (user.avatar_url) {
-      return <img src={user.avatar_url} alt={user.username} className="review-avatar" style={{ objectFit: "cover", ...style }} />;
-    }
-    return (
-      <div className="review-avatar" style={{ background: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", ...style }}>
-        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "60%", height: "60%" }}>
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </div>
-    );
-  };
 
   const hasAdditionalCalories = Object.values(userAdditionalCalories).some(val => {
     const num = parseFloat(val);
