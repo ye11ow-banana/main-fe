@@ -219,6 +219,12 @@ export function AddDay({ user }: AddDayProps) {
     );
   };
 
+  const hasAdditionalCalories = Object.values(userAdditionalCalories).some(val => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num !== 0;
+  });
+  const isSaveDisabled = isSaving || (reviewItems.length === 0 && !hasAdditionalCalories);
+
   return (
     <div className={`add-day-page theme-${theme}`}>
       <Header user={user} />
@@ -425,7 +431,7 @@ export function AddDay({ user }: AddDayProps) {
                       className="btn-primary" 
                       id="saveButton"
                       onClick={handleSave}
-                      disabled={isSaving}
+                      disabled={isSaveDisabled}
                     >
                       {isSaving ? "Saving..." : "Save"}
                     </button>

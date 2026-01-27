@@ -485,14 +485,20 @@
       margin-top: 0;
       width: auto;
     }
-    .add-day-page .btn-primary:hover {
+    .add-day-page .btn-primary:not(:disabled):hover {
       transform: translateY(-1px);
       box-shadow: 0 16px 36px rgba(37, 99, 235, 0.45);
       background: #1D4ED8;
     }
-    .add-day-page .btn-primary:active {
+    .add-day-page .btn-primary:not(:disabled):active {
       transform: translateY(0);
       box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+    }
+    .add-day-page .btn-primary:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      transform: none;
+      box-shadow: none;
     }
     .add-day-page .btn-ghost {
       border-radius: var(--radius-pill);
