@@ -68,7 +68,7 @@
       width: 28px;
       height: 28px;
       border-radius: 8px;
-      background: var(--color-primary);
+      background-color: var(--color-primary);
     }
     .add-day-page .logo-text {
       font-weight: 600;

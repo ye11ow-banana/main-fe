@@ -29,9 +29,7 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background-image: url("/icon.png");
-  background-size: cover;
-  background-position: center;
+  background-color: #2563EB;
 }
 
 .logo-text {
