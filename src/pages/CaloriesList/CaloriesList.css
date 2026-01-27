@@ -199,13 +199,17 @@
 .calories-page .chart-card {
   border-radius: 22px;
   border: 1px solid var(--color-border-subtle);
-  background: rgba(255, 255, 255, 0.65);
+  background: var(--color-surface);
   padding: 14px 14px 10px;
   overflow: hidden;
 }
 
 .calories-page.theme-light .chart-card {
   background: rgba(255, 255, 255, 0.65);
+}
+
+.calories-page.theme-dark .chart-card {
+  background: rgba(15, 23, 42, 0.3);
 }
 
 .calories-page .chart-inner {
@@ -221,9 +225,14 @@
 
 .calories-page .chart-grid line,
 .calories-page .chart-axes line {
-  stroke: rgba(100, 116, 139, 0.24);
+  stroke: rgba(148, 163, 184, 0.2);
   vector-effect: non-scaling-stroke;
   shape-rendering: crispEdges;
+}
+
+.calories-page.theme-dark .chart-grid line,
+.calories-page.theme-dark .chart-axes line {
+  stroke: rgba(255, 255, 255, 0.1);
 }
 
 .calories-page .chart-line {
@@ -256,6 +265,7 @@
 .calories-page .chart-axis-text {
   font-size: 12px;
   fill: var(--color-text-secondary);
+  transition: fill 0.2s ease;
 }
 
 .calories-page .chart-tip {
