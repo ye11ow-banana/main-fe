@@ -23,6 +23,7 @@
   gap: 8px;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
 }
 
 .logo-icon {
@@ -122,6 +123,7 @@
   padding: 4px 8px;
   border-radius: var(--radius-md, 8px);
   transition: background-color 0.2s;
+  user-select: none;
 }
 
 .avatar-block:hover {

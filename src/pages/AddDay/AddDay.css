@@ -63,7 +63,13 @@
       display: flex;
       align-items: center;
     }
-    .add-day-page .header-left { flex: 0 0 auto; gap: 8px; }
+    .add-day-page .header-left { 
+      flex: 0 0 auto; 
+      gap: 8px; 
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
     .add-day-page .logo-icon {
       width: 28px;
       height: 28px;
@@ -135,7 +141,13 @@
       color: var(--color-text-secondary);
       font-size: 18px;
     }
-    .add-day-page .avatar-block { display: flex; align-items: center; gap: 10px; }
+    .add-day-page .avatar-block { 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      cursor: pointer;
+      user-select: none;
+    }
     .add-day-page .avatar-image {
       width: 32px;
       height: 32px;
