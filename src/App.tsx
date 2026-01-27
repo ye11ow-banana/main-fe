@@ -84,15 +84,24 @@ export default function App() {
 
     // Requirement: Signup page must be the default when user is not authenticated.
     if (auth.status === "unauthenticated") {
-      if (pathname === "/sign-in" || pathname === "/signin") return <SignIn />;
-      if (pathname === "/sign-up" || pathname === "/signup" || pathname === "/") return <SignUp />;
+      if (pathname === "/sign-in" || pathname === "/signin") {
+        document.title = "Sign In";
+        return <SignIn />;
+      }
+      if (pathname === "/sign-up" || pathname === "/signup" || pathname === "/") {
+        document.title = "Sign Up";
+        return <SignUp />;
+      }
       return redirect("/sign-up");
     }
 
     // Authenticated
     if (!auth.user.is_verified) {
       // Only verify-email is available.
-      if (pathname === "/verify-email") return <VerifyEmail />;
+      if (pathname === "/verify-email") {
+        document.title = "Verify Email";
+        return <VerifyEmail />;
+      }
       return redirect("/verify-email");
     }
 
@@ -108,21 +117,28 @@ export default function App() {
     }
 
     // Default signed-in route
-    if (pathname === "/") return <Home user={auth.user} />;
+    if (pathname === "/") {
+      document.title = "Info";
+      return <Home user={auth.user} />;
+    }
 
     if (pathname === "/calories" || pathname === "/calories-list") {
+      document.title = "Calories List";
       return <CaloriesList user={auth.user} />;
     }
 
     if (pathname === "/products" || pathname === "/products-list") {
+      document.title = "Product List";
       return <ProductsList user={auth.user} />;
     }
 
     if (pathname === "/add-day") {
+      document.title = "Add Day";
       return <AddDay user={auth.user} />;
     }
 
     if (pathname === "/profile") {
+      document.title = "Profile";
       return <Profile user={auth.user} />;
     }
 
