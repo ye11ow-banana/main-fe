@@ -20,7 +20,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 export function SignIn() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 

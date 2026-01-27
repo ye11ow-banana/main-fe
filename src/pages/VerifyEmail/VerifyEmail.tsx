@@ -13,7 +13,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 export function VerifyEmail() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const email = useMemo(() => localStorage.getItem("pending_email"), []);
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);

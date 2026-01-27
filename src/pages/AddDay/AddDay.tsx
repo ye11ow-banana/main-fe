@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { getUsers, type UserInfo } from "../../api/auth";
-import { getApps, type AppDTO } from "../../api/apps";
 import { ingestCalorieData, createCalorieDay, getProducts, type Product } from "../../api/calories";
 import "./AddDay.css";
 
@@ -24,7 +23,6 @@ export function AddDay({ user }: AddDayProps) {
   const { theme } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
-  const [apps, setApps] = useState<AppDTO[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +31,7 @@ export function AddDay({ user }: AddDayProps) {
   
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
+  const [additionalCalories, setAdditionalCalories] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,10 +44,6 @@ export function AddDay({ user }: AddDayProps) {
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
   useEffect(() => {
-    getApps().then((res) => {
-      const list = Array.isArray(res.data) ? res.data : [res.data];
-      setApps(list);
-    });
     getUsers().then((res) => {
       setAvailableUsers(res.data);
     });
@@ -116,6 +111,7 @@ export function AddDay({ user }: AddDayProps) {
       await createCalorieDay({
         date,
         notes,
+        additional_calories: additionalCalories ? parseFloat(additionalCalories) : 0,
         products: reviewItems.map(item => ({
           user_id: item.user_id,
           product_id: item.product_id,
@@ -282,6 +278,20 @@ export function AddDay({ user }: AddDayProps) {
                         placeholder="Select day"
                         value={date} 
                         onChange={(e) => setDate(e.target.value)} 
+                        disabled={hasAnalyzed}
+                      />
+                    </div>
+                    <div className="field-group">
+                      <label className="field-label" htmlFor="additionalCalories">Additional calories</label>
+                      <span className="field-hint">Extra calories to add to this day (e.g. from snacks)</span>
+                      <input
+                        id="additionalCalories"
+                        name="additionalCalories"
+                        type="number"
+                        className="field-input"
+                        placeholder="e.g. 200"
+                        value={additionalCalories}
+                        onChange={(e) => setAdditionalCalories(e.target.value)}
                         disabled={hasAnalyzed}
                       />
                     </div>

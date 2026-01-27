@@ -55,6 +55,7 @@ export type DayFullInfo = {
   total_fats: string | number;
   total_carbs: string | number;
   total_calories: string | number;
+  additional_calories: string | number;
   products: DayProduct[];
 };
 
@@ -143,6 +144,7 @@ export type CreateDayRequest = {
   notes?: string;
   body_weight?: number;
   body_fat?: number;
+  additional_calories?: number;
   products: DayProductInput[];
 };
 

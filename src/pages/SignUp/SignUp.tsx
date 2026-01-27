@@ -52,7 +52,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 export function SignUp() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

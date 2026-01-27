@@ -467,7 +467,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: 12px;
+      margin-top: 32px;
     }
     .add-day-page .btn-primary {
       border: none;
@@ -675,6 +675,7 @@
       .add-day-page .form-actions {
         flex-direction: column-reverse;
         align-items: stretch;
+        margin-top: 24px;
       }
       .add-day-page .btn-primary,
       .add-day-page .btn-ghost {
