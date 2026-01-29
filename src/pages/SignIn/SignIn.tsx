@@ -85,7 +85,10 @@ export function SignIn() {
       <div className="auth-wrapper">
         <div className="auth-card">
           <header className="auth-header">
-            <div className="auth-logo" />
+            <a href="/" className="auth-logo-link">
+              <div className="auth-logo" />
+              <div className="logo-text">Cube</div>
+            </a>
             <div>
               <h1 className="auth-heading">Sign in</h1>
               <p className="auth-subtitle">Sign in to your Cube account.</p>

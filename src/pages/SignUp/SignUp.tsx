@@ -126,7 +126,10 @@ export function SignUp() {
       <div className="auth-wrapper">
         <div className="auth-card">
           <header className="auth-header">
-            <div className="auth-logo" />
+            <a href="/" className="auth-logo-link">
+              <div className="auth-logo" />
+              <div className="logo-text">Cube</div>
+            </a>
             <div>
               <h1 className="auth-heading">Sign up</h1>
               <p className="auth-subtitle">Create a new Cube account.</p>

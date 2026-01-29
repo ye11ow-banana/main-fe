@@ -68,6 +68,21 @@
   background: var(--color-primary);
 }
 
+.auth-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  width: fit-content;
+}
+
+.logo-text {
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.01em;
+}
+
 .auth-heading {
   font-size: 26px;
   font-weight: 600;
@@ -197,6 +212,10 @@
 
   .auth-heading {
     font-size: 24px;
+  }
+
+  .logo-text {
+    display: block;
   }
 
   .auth-form {
