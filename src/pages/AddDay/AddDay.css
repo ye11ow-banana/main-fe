@@ -662,9 +662,11 @@
         justify-content: space-between;
       }
       .add-day-page .header-center { display: none; }
-      .add-day-page .icon-button--search { display: flex; }
+      .add-day-page .icon-button--search {
+        display: flex;
+        color: var(--color-search-placeholder, var(--color-input-placeholder));
+      }
       .add-day-page .icon-button--bell { display: flex; }
-      .add-day-page .logo-text { display: none; }
       .add-day-page .avatar-name { display: none; }
       .add-day-page .main { padding-top: 24px; }
       .add-day-page .page-title { font-size: 24px; }

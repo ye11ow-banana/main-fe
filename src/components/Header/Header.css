@@ -56,7 +56,8 @@
   padding: 10px 20px;
 }
 
-.header .search-icon {
+.header .search-icon,
+.icon-button--search .search-icon {
   width: 16px;
   height: 16px;
   border-radius: 999px;
@@ -65,7 +66,8 @@
   flex-shrink: 0;
 }
 
-.header .search-icon::after {
+.header .search-icon::after,
+.icon-button--search .search-icon::after {
   content: "";
   position: absolute;
   width: 6px;
@@ -209,14 +211,11 @@
 
   .icon-button--search {
     display: flex;
+    color: var(--color-search-placeholder, var(--color-input-placeholder));
   }
 
   .icon-button--bell {
     display: flex;
-  }
-
-  .logo-text {
-    display: none;
   }
 
   .avatar-name {

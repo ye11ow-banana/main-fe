@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
         <div className="header-right">
           <button className="icon-button icon-button--search" aria-label="Search">
-            🔍
+            <div className="search-icon" />
           </button>
           <button className="icon-button icon-button--bell" aria-label="Notifications">
             <span className="icon-bell" aria-hidden="true" />
