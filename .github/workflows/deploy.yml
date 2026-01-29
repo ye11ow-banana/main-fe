@@ -17,6 +17,8 @@ jobs:
           cache: "npm"
 
       - name: Build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
           npm ci
           npm run build
@@ -28,9 +30,9 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           source: "dist/*"
-          target: "/opt/cube/frontend"
+          target: "/opt/cube/frontend/dist"
 
-      - name: (Optional) restart nginx container
+      - name: Restart caddy container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DO_HOST }}
@@ -38,6 +40,5 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
             set -e
-            # only needed if your nginx is configured to serve /opt/cube/frontend
             cd /opt/cube/backend
-            docker compose -f compose.yml -f compose.prod.yml restart nginx || true
+            docker compose -f compose.yml -f compose.prod.yml restart caddy || true
