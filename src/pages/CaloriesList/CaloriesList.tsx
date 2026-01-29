@@ -592,20 +592,10 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                 <br />
                 <span style={{ fontSize: 12 }}>Tap a row to view detailed products</span>
               </div>
-              <div className="day-section-actions" style={{ display: 'flex', gap: '8px' }}>
+              <div className="day-section-actions">
                 <button
                   className="btn-ghost-nav"
                   type="button"
-                  style={{
-                    border: '1px solid var(--color-border-subtle)',
-                    borderRadius: 'var(--radius-pill)',
-                    padding: '8px 14px',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    color: 'var(--color-text-secondary)'
-                  }}
                   onClick={() => (window.location.href = "/products-list")}
                 >
                   Manage products

@@ -352,9 +352,32 @@
   color: var(--color-text-secondary);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 16px;
+}
+
+.calories-page .day-section-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.calories-page .btn-ghost-nav {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.calories-page .btn-ghost-nav:hover {
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.05));
+  color: var(--color-text-primary);
 }
 
 .calories-page .day-section-header span:first-child {
@@ -642,6 +665,24 @@
 
   .calories-page .product-item {
     grid-template-columns: 2fr 1fr 1.1fr;
+  }
+
+  .calories-page .day-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .calories-page .day-section-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .calories-page .btn-ghost-nav {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
   }
 
   .calories-page .btn-add-day {
