@@ -648,4 +648,8 @@
     width: 100%;
     justify-content: center;
   }
+
+  .calories-page .chart-axis-text {
+    font-size: 20px;
+  }
 }
