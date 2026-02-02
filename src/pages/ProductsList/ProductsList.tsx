@@ -41,12 +41,12 @@ export function ProductsList({ user }: { user: UserInfo }) {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const [formData, setFormData] = useState<ProductInput>({
+  const [formData, setFormData] = useState({
     name: "",
-    proteins: 0,
-    fats: 0,
-    carbs: 0,
-    calories: 0,
+    proteins: "" as string | number,
+    fats: "" as string | number,
+    carbs: "" as string | number,
+    calories: "" as string | number,
   });
 
   const loadProducts = async () => {
@@ -90,10 +90,10 @@ export function ProductsList({ user }: { user: UserInfo }) {
       setEditingProduct(null);
       setFormData({
         name: "",
-        proteins: 0,
-        fats: 0,
-        carbs: 0,
-        calories: 0,
+        proteins: "",
+        fats: "",
+        carbs: "",
+        calories: "",
       });
     }
     setFormError(null);
@@ -114,10 +114,17 @@ export function ProductsList({ user }: { user: UserInfo }) {
     setIsSaving(true);
     setFormError(null);
     try {
+      const payload: ProductInput = {
+        name: formData.name,
+        proteins: toNumber(formData.proteins),
+        fats: toNumber(formData.fats),
+        carbs: toNumber(formData.carbs),
+        calories: toNumber(formData.calories),
+      };
       if (editingProduct) {
-        await updateProduct(editingProduct.id, formData);
+        await updateProduct(editingProduct.id, payload);
       } else {
-        await createProduct(formData);
+        await createProduct(payload);
       }
       handleCloseModal();
       loadProducts();
@@ -285,7 +292,9 @@ export function ProductsList({ user }: { user: UserInfo }) {
                     type="number"
                     className="field-input"
                     value={formData.proteins}
-                    onChange={(e) => setFormData({ ...formData, proteins: toNumber(e.target.value) })}
+                    placeholder="0"
+                    onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, proteins: "" }); }}
+                    onChange={(e) => setFormData({ ...formData, proteins: e.target.value })}
                   />
                 </div>
                 <div className="field-group">
@@ -294,7 +303,9 @@ export function ProductsList({ user }: { user: UserInfo }) {
                     type="number"
                     className="field-input"
                     value={formData.fats}
-                    onChange={(e) => setFormData({ ...formData, fats: toNumber(e.target.value) })}
+                    placeholder="0"
+                    onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, fats: "" }); }}
+                    onChange={(e) => setFormData({ ...formData, fats: e.target.value })}
                   />
                 </div>
                 <div className="field-group">
@@ -303,7 +314,9 @@ export function ProductsList({ user }: { user: UserInfo }) {
                     type="number"
                     className="field-input"
                     value={formData.carbs}
-                    onChange={(e) => setFormData({ ...formData, carbs: toNumber(e.target.value) })}
+                    placeholder="0"
+                    onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, carbs: "" }); }}
+                    onChange={(e) => setFormData({ ...formData, carbs: e.target.value })}
                   />
                 </div>
                 <div className="field-group">
@@ -312,7 +325,9 @@ export function ProductsList({ user }: { user: UserInfo }) {
                     type="number"
                     className="field-input"
                     value={formData.calories}
-                    onChange={(e) => setFormData({ ...formData, calories: toNumber(e.target.value) })}
+                    placeholder="0"
+                    onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, calories: "" }); }}
+                    onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
                   />
                 </div>
               </div>

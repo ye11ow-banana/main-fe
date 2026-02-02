@@ -108,7 +108,7 @@ export function AddDay({ user }: AddDayProps) {
             user: p.user,
             product_id: p.product_id,
             product_name: p.name,
-            weight: p.weight || "0",
+            weight: p.weight || "",
           };
         });
         setReviewItems(items);
@@ -163,7 +163,7 @@ export function AddDay({ user }: AddDayProps) {
         user: defaultUser?.username || "Select User",
         product_id: "",
         product_name: "",
-        weight: "0",
+        weight: "",
       },
     ]);
   };
@@ -376,8 +376,9 @@ export function AddDay({ user }: AddDayProps) {
                                 type="text"
                                 name={`items[${index + 4}][grams]`}
                                 value={item.weight}
+                                onFocus={(e) => { if (e.target.value === "0") updateItem(item.id, { weight: "" }); }}
                                 onChange={(e) => updateItem(item.id, { weight: e.target.value })}
-                                placeholder="Grams (e.g. 100+50)"
+                                placeholder="0"
                               />
                               <button 
                                 type="button" 
@@ -413,8 +414,9 @@ export function AddDay({ user }: AddDayProps) {
                                   className="review-input"
                                   style={{ width: "120px" }}
                                   type="number"
-                                  placeholder="e.g. 200"
+                                  placeholder="0"
                                   value={userAdditionalCalories[userId] || ""}
+                                  onFocus={(e) => { if (e.target.value === "0") setUserAdditionalCalories({ ...userAdditionalCalories, [userId]: "" }); }}
                                   onChange={(e) => setUserAdditionalCalories({ ...userAdditionalCalories, [userId]: e.target.value })}
                                 />
                               </div>
