@@ -16,3 +16,12 @@ body {
 button, input, select, textarea {
   font-family: inherit;
 }
+
+/* Global fix for iOS auto-zoom */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
