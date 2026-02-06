@@ -531,10 +531,11 @@
       inset: 0;
       background: rgba(15, 23, 42, 0.55);
       display: none;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       z-index: 50;
-      padding: 16px;
+      padding: 60px 16px;
+      overflow-y: auto;
     }
     .add-day-page .user-modal-backdrop.is-open {
       display: flex;
@@ -590,7 +591,7 @@
     .add-day-page .user-modal-list {
       margin-top: 6px;
       max-height: 480px; /* 10 items * 48px each roughly */
-      overflow: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 4px;
