@@ -99,7 +99,10 @@ import { useTheme } from "../../context/ThemeContext";
 export function CaloriesList({ user }: { user: UserInfo }) {
   const { theme } = useTheme();
   const defaultEnd = useMemo(() => toDateInputValue(new Date()), []);
-  const defaultStart = useMemo(() => toDateInputValue(addDays(new Date(), -30)), []);
+  const defaultStart = useMemo(
+    () => toDateInputValue(addDays(new Date(), -30)),
+    [],
+  );
 
   const fallbackSortOptions: NameCode[] = useMemo(
     () => [
@@ -108,14 +111,15 @@ export function CaloriesList({ user }: { user: UserInfo }) {
       { name: "Most calories", code: "most_calories" },
       { name: "Lowest weight", code: "lowest_weight" },
     ],
-    []
+    [],
   );
 
   const [trendType, setTrendType] = useState<TrendType>("weight");
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
   const [sortBy, setSortBy] = useState<DaysSortBy>("most_recent");
-  const [sortOptions, setSortOptions] = useState<NameCode[]>(fallbackSortOptions);
+  const [sortOptions, setSortOptions] =
+    useState<NameCode[]>(fallbackSortOptions);
 
   const chartSvgRef = useRef<SVGSVGElement | null>(null);
   const chartTipRef = useRef<HTMLDivElement | null>(null);
@@ -142,7 +146,12 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
         const start = res?.data?.start_date;
         const end = res?.data?.end_date;
-        if (typeof start === "string" && typeof end === "string" && start && end) {
+        if (
+          typeof start === "string" &&
+          typeof end === "string" &&
+          start &&
+          end
+        ) {
           setStartDate(start);
           setEndDate(end);
         }
@@ -239,8 +248,13 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
         const payload = res?.data;
         const list = Array.isArray(payload?.data) ? payload.data : [];
+
         setDays(list);
-        setDaysPageCount(typeof payload?.page_count === "number" && payload.page_count > 0 ? payload.page_count : 1);
+        setDaysPageCount(
+          typeof payload?.page_count === "number" && payload.page_count > 0
+            ? payload.page_count
+            : 1,
+        );
       } catch (err) {
         if (!isMounted) return;
         if (err instanceof ApiError) setDaysError(err.message);
@@ -276,8 +290,10 @@ export function CaloriesList({ user }: { user: UserInfo }) {
     const innerW = W - padL - padR;
     const innerH = H - padT - padB;
 
-    const metricLabel = trendType === "weight" ? "Weight, kg" : "Calories, kcal";
-    const ariaLabel = trendType === "weight" ? "Weight over time" : "Calories over time";
+    const metricLabel =
+      trendType === "weight" ? "Weight, kg" : "Calories, kcal";
+    const ariaLabel =
+      trendType === "weight" ? "Weight over time" : "Calories over time";
 
     if (normalized.length < 2) {
       return {
@@ -314,7 +330,12 @@ export function CaloriesList({ user }: { user: UserInfo }) {
     const xAt = (i: number) => padL + innerW * (i / (series.length - 1 || 1));
     const yAt = (v: number) => padT + innerH * (1 - (v - yMin) / (yMax - yMin));
 
-    const pts = series.map((d, i) => ({ x: xAt(i), y: yAt(d.value), date: d.date, value: d.value }));
+    const pts = series.map((d, i) => ({
+      x: xAt(i),
+      y: yAt(d.value),
+      date: d.date,
+      value: d.value,
+    }));
 
     const lineD = pts
       .map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
@@ -331,7 +352,10 @@ export function CaloriesList({ user }: { user: UserInfo }) {
     const xLabels = [
       { x: xAt(0), text: formatShortDate(series[0].date) },
       { x: xAt(mid), text: formatShortDate(series[mid].date) },
-      { x: xAt(series.length - 1), text: formatShortDate(series[series.length - 1].date) },
+      {
+        x: xAt(series.length - 1),
+        text: formatShortDate(series[series.length - 1].date),
+      },
     ];
 
     return {
@@ -410,7 +434,9 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                   Weight (kg)
                 </button>
                 <button
-                  className={trendType === "calorie" ? "tab tab--active" : "tab"}
+                  className={
+                    trendType === "calorie" ? "tab tab--active" : "tab"
+                  }
                   type="button"
                   onClick={() => setTrendType("calorie")}
                 >
@@ -465,7 +491,9 @@ export function CaloriesList({ user }: { user: UserInfo }) {
             <div className="chart-card">
               <div
                 className="chart-inner"
-                onPointerMove={(e) => updateHoverFromPointer(e.clientX, e.clientY)}
+                onPointerMove={(e) =>
+                  updateHoverFromPointer(e.clientX, e.clientY)
+                }
                 onPointerLeave={() => {
                   const svg = chartSvgRef.current;
                   if (svg) svg.classList.remove("chart-hover");
@@ -485,7 +513,12 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                   aria-label={chart.ariaLabel}
                 >
                   {!isLoading && !error && !chart.hasData && (
-                    <text x="50%" y="50%" textAnchor="middle" className="chart-axis-text">
+                    <text
+                      x="50%"
+                      y="50%"
+                      textAnchor="middle"
+                      className="chart-axis-text"
+                    >
                       Not enough data to plot
                     </text>
                   )}
@@ -505,7 +538,12 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                       </g>
 
                       <g className="chart-axes">
-                        <line x1={chart.padL} y1={chart.padT} x2={chart.padL} y2={chart.padT + chart.innerH} />
+                        <line
+                          x1={chart.padL}
+                          y1={chart.padT}
+                          x2={chart.padL}
+                          y2={chart.padT + chart.innerH}
+                        />
                         <line
                           x1={chart.padL}
                           y1={chart.padT + chart.innerH}
@@ -523,7 +561,9 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                             y={t.y + 4}
                             textAnchor="end"
                           >
-                            {trendType === "weight" ? t.v.toFixed(1) : Math.round(t.v)}
+                            {trendType === "weight"
+                              ? t.v.toFixed(1)
+                              : Math.round(t.v)}
                           </text>
                         ))}
                       </g>
@@ -533,7 +573,14 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
                       <g className="chart-points">
                         {chart.pts.map((p, idx) => (
-                          <circle key={p.date} className="chart-point" cx={p.x} cy={p.y} r={5} data-i={idx} />
+                          <circle
+                            key={p.date}
+                            className="chart-point"
+                            cx={p.x}
+                            cy={p.y}
+                            r={5}
+                            data-i={idx}
+                          />
                         ))}
                       </g>
 
@@ -561,17 +608,28 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                 >
                   {hoverIndex != null && chart.hasData && (
                     <>
-                      <strong>{formatShortDate(chart.series[hoverIndex]?.date ?? "")}</strong>
+                      <strong>
+                        {formatShortDate(chart.series[hoverIndex]?.date ?? "")}
+                      </strong>
                       <br />
-                      {formatValue(chart.series[hoverIndex]?.value ?? 0, trendType)}
+                      {formatValue(
+                        chart.series[hoverIndex]?.value ?? 0,
+                        trendType,
+                      )}
                     </>
                   )}
                 </div>
 
                 <div className="chart-overlay" aria-live="polite">
-                  {isLoading && <span className="chart-overlay__text">Loading trend data…</span>}
+                  {isLoading && (
+                    <span className="chart-overlay__text">
+                      Loading trend data…
+                    </span>
+                  )}
                   {!isLoading && error && (
-                    <span className="chart-overlay__text chart-overlay__text--error">{error}</span>
+                    <span className="chart-overlay__text chart-overlay__text--error">
+                      {error}
+                    </span>
                   )}
                 </div>
               </div>
@@ -590,7 +648,9 @@ export function CaloriesList({ user }: { user: UserInfo }) {
               <div>
                 <span>Daily overview</span>
                 <br />
-                <span style={{ fontSize: 12 }}>Tap a row to view detailed products</span>
+                <span style={{ fontSize: 12 }}>
+                  Tap a row to view detailed products
+                </span>
               </div>
               <div className="day-section-actions">
                 <button
@@ -612,23 +672,36 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
             <div className="day-list">
               {daysLoading && (
-                <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Loading days…</div>
+                <div
+                  style={{ fontSize: 12, color: "var(--color-text-secondary)" }}
+                >
+                  Loading days…
+                </div>
               )}
 
               {!daysLoading && daysError && (
-                <div style={{ fontSize: 12, color: "#DC2626" }}>{daysError}</div>
+                <div style={{ fontSize: 12, color: "#DC2626" }}>
+                  {daysError}
+                </div>
               )}
 
               {!daysLoading && !daysError && days.length === 0 && (
-                <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
+                <div
+                  style={{ fontSize: 12, color: "var(--color-text-secondary)" }}
+                >
                   No days found for the selected range.
                 </div>
               )}
 
-              {!daysLoading && !daysError &&
+              {!daysLoading &&
+                !daysError &&
                 days.map((day) => {
-                  const totalCalories = Math.round(toNumber(day.total_calories)).toLocaleString();
-                  const products = Array.isArray(day.products) ? day.products : [];
+                  const totalCalories = Math.round(
+                    toNumber(day.total_calories),
+                  ).toLocaleString();
+                  const products = Array.isArray(day.products)
+                    ? day.products
+                    : [];
                   const isOpen = openDayId === day.id;
 
                   return (
@@ -637,38 +710,56 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                         className="day-summary"
                         onClick={(e) => {
                           e.preventDefault();
-                          setOpenDayId((prev) => (prev === day.id ? null : day.id));
+                          setOpenDayId((prev) =>
+                            prev === day.id ? null : day.id,
+                          );
                         }}
                       >
                         <div className="day-summary-main">
-                          <div className="day-date">{formatDayDate(day.created_at)}</div>
-                          <div className="day-kcal">{totalCalories} kcal total</div>
+                          <div className="day-date">
+                            {formatDayDate(day.created_at)}
+                          </div>
+                          <div className="day-kcal">
+                            {totalCalories} kcal total
+                          </div>
                         </div>
 
                         <div className="day-summary-stats">
                           <div className="stat-chip">
                             <span className="stat-label">Proteins</span>
-                            <span className="stat-value">{Math.round(toNumber(day.total_proteins))} g</span>
+                            <span className="stat-value">
+                              {Math.round(toNumber(day.total_proteins))} g
+                            </span>
                           </div>
                           <div className="stat-chip">
                             <span className="stat-label">Fats</span>
-                            <span className="stat-value">{Math.round(toNumber(day.total_fats))} g</span>
+                            <span className="stat-value">
+                              {Math.round(toNumber(day.total_fats))} g
+                            </span>
                           </div>
                           <div className="stat-chip">
-                            <span className="stat-label">Carbs</span>
-                            <span className="stat-value">{Math.round(toNumber(day.total_carbs))} g</span>
+                            <span className="stat-label">Carbohydrates</span>
+                            <span className="stat-value">
+                              {Math.round(toNumber(day.total_carbs))} g
+                            </span>
                           </div>
                           <div className="stat-chip">
                             <span className="stat-label">Weight</span>
-                            <span className="stat-value">{formatMaybeKg(day.body_weight)}</span>
+                            <span className="stat-value">
+                              {formatMaybeKg(day.body_weight)}
+                            </span>
                           </div>
                           <div className="stat-chip">
                             <span className="stat-label">Fat %</span>
-                            <span className="stat-value">{formatMaybePercent(day.body_fat)}</span>
+                            <span className="stat-value">
+                              {formatMaybePercent(day.body_fat)}
+                            </span>
                           </div>
                           <div className="stat-chip">
                             <span className="stat-label">Trend</span>
-                            <span className="stat-value">{formatSignedKg(day.trend)}</span>
+                            <span className="stat-value">
+                              {formatSignedKg(day.trend)}
+                            </span>
                           </div>
                         </div>
 
@@ -676,21 +767,54 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                       </summary>
 
                       <div className="day-details">
-                        <div className="day-details-title">Products eaten</div>
+                        <div className="day-details-header">
+                          <span className="day-details-title">
+                            Products eaten
+                          </span>
+                          <span className="day-details-description">
+                            Weight
+                          </span>
+                          <span className="day-details-description">
+                            Calories
+                          </span>
+                          <span className="day-details-description">
+                            Proteins
+                          </span>
+                          <span className="day-details-description">Fats</span>
+                          <span className="day-details-description">
+                            Carbohydrates
+                          </span>
+                        </div>
                         <ul className="product-list">
                           {products.length === 0 && (
                             <li className="product-item">
                               <span className="product-name">No products</span>
                               <span className="product-weight"></span>
                               <span className="product-kcal"></span>
+                              <span className="product-proteins"></span>
+                              <span className="product-fats"></span>
+                              <span className="product-carbs"></span>
                             </li>
                           )}
 
                           {products.map((p) => (
                             <li key={p.id} className="product-item">
                               <span className="product-name">{p.name}</span>
-                              <span className="product-weight">{formatMaybeGrams(p.weight)}</span>
-                              <span className="product-kcal">{Math.round(toNumber(p.calories))} kcal</span>
+                              <span className="product-weight">
+                                {formatMaybeGrams(p.weight)}
+                              </span>
+                              <span className="product-kcal">
+                                {Math.round(toNumber(p.calories))} kcal
+                              </span>
+                              <span className="product-proteins">
+                                {Math.round(toNumber(p.proteins))} g
+                              </span>
+                              <span className="product-fats">
+                                {Math.round(toNumber(p.fats))} g
+                              </span>
+                              <span className="product-carbs">
+                                {Math.round(toNumber(p.carbs))} g
+                              </span>{" "}
                             </li>
                           ))}
                         </ul>
@@ -715,7 +839,11 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
                 {(() => {
                   const maxBtns = 7;
-                  const start = clamp(daysPage - 3, 1, Math.max(1, daysPageCount - maxBtns + 1));
+                  const start = clamp(
+                    daysPage - 3,
+                    1,
+                    Math.max(1, daysPageCount - maxBtns + 1),
+                  );
                   const end = Math.min(daysPageCount, start + maxBtns - 1);
                   const pages: number[] = [];
                   for (let i = start; i <= end; i++) pages.push(i);
@@ -725,7 +853,11 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                       {start > 1 && (
                         <a
                           href="#"
-                          className={daysPage === 1 ? "page-btn page-btn--active" : "page-btn"}
+                          className={
+                            daysPage === 1
+                              ? "page-btn page-btn--active"
+                              : "page-btn"
+                          }
                           onClick={(e) => {
                             e.preventDefault();
                             setDaysPage(1);
@@ -748,7 +880,11 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                         <a
                           key={p}
                           href="#"
-                          className={p === daysPage ? "page-btn page-btn--active" : "page-btn"}
+                          className={
+                            p === daysPage
+                              ? "page-btn page-btn--active"
+                              : "page-btn"
+                          }
                           onClick={(e) => {
                             e.preventDefault();
                             setDaysPage(p);
@@ -770,7 +906,11 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                       {end < daysPageCount && (
                         <a
                           href="#"
-                          className={daysPage === daysPageCount ? "page-btn page-btn--active" : "page-btn"}
+                          className={
+                            daysPage === daysPageCount
+                              ? "page-btn page-btn--active"
+                              : "page-btn"
+                          }
                           onClick={(e) => {
                             e.preventDefault();
                             setDaysPage(daysPageCount);
