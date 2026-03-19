@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./SignIn.css";
-import { getMe, signIn } from "../../api/auth";
+import { getMe, signIn, signInWithGoogle, type SignInResponse } from "../../api/auth";
 import { ApiError } from "../../api/http";
 import { parseApiError } from "../../api/errorParsing";
+import { loadGoogleSdk } from "../../lib/google";
+import { useTheme } from "../../context/ThemeContext";
+import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 type FieldErrors = Record<string, string>;
 
@@ -16,17 +19,65 @@ function validate(values: { username: string; password: string }): {
   return { fieldErrors, formError: null };
 }
 
-import { useTheme } from "../../context/ThemeContext";
-import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
-
 export function SignIn() {
   const { theme } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const googleBtnRef = useRef<HTMLDivElement | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  async function finishLogin(res: SignInResponse) {
+    const authHeaderValue = `${res.data.token_type} ${res.data.access_token}`;
+    localStorage.setItem("access_token", authHeaderValue);
+    localStorage.setItem("refresh_token", res.data.refresh_token);
+
+    const me = await getMe();
+    if (me.data.is_verified) {
+      localStorage.removeItem("pending_email");
+      window.location.href = "/";
+    } else {
+      localStorage.setItem("pending_email", me.data.email);
+      window.location.href = "/verify-email";
+    }
+  }
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    if (!clientId || !googleBtnRef.current) return;
+
+    loadGoogleSdk()
+      .then(() => {
+        if (!window.google?.accounts?.id || !googleBtnRef.current) {
+          throw new Error("Google Sign-In is unavailable");
+        }
+
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response: { credential?: string }) => {
+            try {
+              setError(null);
+              if (!response.credential) throw new Error("No Google credential");
+              const res = await signInWithGoogle({ id_token: response.credential });
+              await finishLogin(res);
+            } catch {
+              setError("Google sign-in failed");
+            }
+          },
+        });
+
+        googleBtnRef.current.innerHTML = "";
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: theme === "dark" ? "filled_black" : "outline",
+          size: "large",
+          shape: "pill",
+          width: 320,
+        });
+      })
+      .catch(() => setError("Failed to load Google Sign-In"));
+  }, [theme]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,20 +93,7 @@ export function SignIn() {
 
     try {
       const res = await signIn({ username, password });
-
-      // Store "bearer <token>" (matches token_type from backend)
-      const authHeaderValue = `${res.data.token_type} ${res.data.access_token}`;
-      localStorage.setItem("access_token", authHeaderValue);
-      localStorage.setItem("refresh_token", res.data.refresh_token);
-
-      const me = await getMe();
-      if (me.data.is_verified) {
-        localStorage.removeItem("pending_email");
-        window.location.href = "/";
-      } else {
-        localStorage.setItem("pending_email", me.data.email);
-        window.location.href = "/verify-email";
-      }
+      await finishLogin(res);
     } catch (err) {
       if (err instanceof ApiError) {
         const parsed = parseApiError(err);
@@ -160,6 +198,19 @@ export function SignIn() {
             <button type="submit" className="btn-primary" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
+
+            <div
+              style={{
+                marginTop: 12,
+                height: 1,
+                width: "100%",
+                backgroundColor: "var(--border, #d1d5db)",
+              }}
+            />
+
+            <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
+              <div ref={googleBtnRef} />
+            </div>
           </form>
 
           <p className="auth-footer-text">

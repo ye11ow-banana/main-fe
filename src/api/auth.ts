@@ -17,8 +17,19 @@ export type SignInResponse = {
   };
 };
 
+export type GoogleSignInRequest = {
+  id_token: string;
+};
+
 export function signIn(body: SignInRequest) {
   return http<SignInResponse>("/auth/sign-in", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function signInWithGoogle(body: GoogleSignInRequest) {
+  return http<SignInResponse>("/auth/google", {
     method: "POST",
     body: JSON.stringify(body),
   });
