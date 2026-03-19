@@ -175,6 +175,35 @@
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
 }
 
+.google-signin-slot {
+  width: 320px;
+  max-width: 100%;
+  border-radius: var(--radius-pill);
+}
+
+.auth-page.theme-dark .google-signin-slot {
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  padding: 1px;
+  overflow: hidden;
+}
+
+.auth-page.theme-dark .google-signin-slot iframe {
+  border: 0;
+  border-radius: calc(var(--radius-pill) - 1px);
+}
+
+.auth-page.theme-dark .google-signin-slot .nsm7Bb-HzV7m-LgbsSe {
+  background: var(--color-input-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.auth-page.theme-dark .google-signin-slot .nsm7Bb-HzV7m-LgbsSe-Bz112c,
+.auth-page.theme-dark .google-signin-slot .nsm7Bb-HzV7m-LgbsSe-MJoBVe {
+  color: var(--color-text-primary) !important;
+}
+
 .auth-footer-text {
   font-size: 13px;
   color: var(--color-text-secondary);

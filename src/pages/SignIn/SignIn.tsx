@@ -209,7 +209,7 @@ export function SignIn() {
             />
 
             <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
-              <div ref={googleBtnRef} />
+              <div className="google-signin-slot" ref={googleBtnRef} />
             </div>
           </form>
 
