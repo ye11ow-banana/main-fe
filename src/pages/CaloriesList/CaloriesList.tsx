@@ -738,7 +738,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                             </span>
                           </div>
                           <div className="stat-chip">
-                            <span className="stat-label">Carbohydrates</span>
+                            <span className="stat-label">Carbs</span>
                             <span className="stat-value">
                               {Math.round(toNumber(day.total_carbs))} g
                             </span>
@@ -781,9 +781,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                             Proteins
                           </span>
                           <span className="day-details-description">Fats</span>
-                          <span className="day-details-description">
-                            Carbohydrates
-                          </span>
+                          <span className="day-details-description">Carbs</span>
                         </div>
                         <ul className="product-list">
                           {products.length === 0 && (
