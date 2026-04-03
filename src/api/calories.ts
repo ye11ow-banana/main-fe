@@ -104,6 +104,7 @@ export function getCalorieDays(params: CalorieDaysParams) {
     page: String(params.page ?? 1),
   });
 
+  console.log(`/calorie/days?${query.toString()}`);
   return authHttp<ResponseDTO<PaginationDTO<DayFullInfo>>>(`/calorie/days?${query.toString()}`,
   {
     method: "GET",
@@ -142,6 +143,8 @@ export type DayProductInput = {
 export type CreateDayRequest = {
   date: string; // YYYY-MM-DD
   user_additional_calories: Record<string, number>; // user_id -> additional_calories
+  user_body_weight: Record<string, number>; // user_id -> body_weight
+  all_body_weights?: Record<string, number>;
   products: DayProductInput[];
 };
 
@@ -149,6 +152,12 @@ export function createCalorieDay(body: CreateDayRequest) {
   return authHttp<ResponseDTO<{ id: string }>>("/calorie/days", {
     method: "POST",
     body: JSON.stringify(body),
+  });
+}
+
+export function getWeightsByDate(date: string) {
+  return authHttp<ResponseDTO<Record<string, number | null>>>(`/calorie/weight/by-date?date=${date}`, {
+    method: "GET",
   });
 }
 
