@@ -104,7 +104,6 @@ export function getCalorieDays(params: CalorieDaysParams) {
     page: String(params.page ?? 1),
   });
 
-  console.log(`/calorie/days?${query.toString()}`);
   return authHttp<ResponseDTO<PaginationDTO<DayFullInfo>>>(`/calorie/days?${query.toString()}`,
   {
     method: "GET",
