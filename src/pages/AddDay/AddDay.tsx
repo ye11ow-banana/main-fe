@@ -184,7 +184,6 @@ export function AddDay({ user }: AddDayProps) {
 
   const addItem = () => {
     const defaultUser = availableUsers[0];
-    console.log(Date.now())
     setReviewItems([
       ...reviewItems,
       {
