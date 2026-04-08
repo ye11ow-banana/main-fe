@@ -155,9 +155,10 @@ export function createCalorieDay(body: CreateDayRequest) {
 }
 
 export function getWeightsByDate(date: string) {
-  return authHttp<ResponseDTO<Record<string, number | null>>>(`/calorie/weight/by-date?date=${date}`, {
-    method: "GET",
-  });
+  return authHttp<ResponseDTO<Record<string, number | null>>>(
+      `/calorie/days/${date}/weight`,
+      { method: "GET" }
+  );
 }
 
 export function getProducts(q: string = "", page: number = 1) {
