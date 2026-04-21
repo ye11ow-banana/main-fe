@@ -43,8 +43,9 @@ export function AddDay({ user }: AddDayProps) {
   const [error, setError] = useState<string | null>(null);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserInfo[]>([]);
-  
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+
+  const [date, setDate] = useState(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString()
+      .split("T")[0]);
   const [notes, setNotes] = useState("");
   const [userAdditionalCalories, setUserAdditionalCalories] = useState<Record<string, string>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -303,7 +304,7 @@ export function AddDay({ user }: AddDayProps) {
                         className="field-input" 
                         placeholder="Select day"
                         value={date} 
-                        onChange={(e) => setDate(e.target.value)} 
+                        onChange={(e) => setDate(e.target.value)}
                         disabled={hasAnalyzed}
                       />
                     </div>
