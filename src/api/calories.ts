@@ -10,6 +10,11 @@ type PaginationDTO<T> = {
   data: T[];
 };
 
+type BodyWeightDTO = {
+  user_id: string;
+  body_weight: number | null;
+};
+
 export type TrendType = "weight" | "calorie";
 
 export type TrendItem = {
@@ -155,7 +160,7 @@ export function createCalorieDay(body: CreateDayRequest) {
 }
 
 export function getWeightsByDate(date: string) {
-  return authHttp<ResponseDTO<Record<string, number | null>>>(
+  return authHttp<ResponseDTO<BodyWeightDTO[]>>(
       `/calorie/days/${date}/weight`,
       { method: "GET" }
   );

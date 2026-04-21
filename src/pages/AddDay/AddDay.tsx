@@ -81,12 +81,23 @@ export function AddDay({ user }: AddDayProps) {
 
     getWeightsByDate(date)
         .then((res) => {
-          if (res.data) {
-            setInitialBodyWeights(res.data);
+          const items = res.data;
+
+          if (Array.isArray(items)) {
+            const map: Record<string, number | null> = {};
+
+            items.forEach((item) => {
+              map[item.user_id] = item.body_weight;
+            });
+
+            setInitialBodyWeights(map);
+          } else {
+            setInitialBodyWeights({});
           }
         })
         .catch((err) => {
           console.error("Failed to fetch initial body weights", err);
+          setInitialBodyWeights({});
         });
   }, [date]);
 
