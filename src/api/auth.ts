@@ -29,7 +29,7 @@ export function signIn(body: SignInRequest) {
 }
 
 export function signInWithGoogle(body: GoogleSignInRequest) {
-  return http<SignInResponse>("/auth/google", {
+  return http<SignInResponse>("/auth/google/sign-in", {
     method: "POST",
     body: JSON.stringify(body),
   });

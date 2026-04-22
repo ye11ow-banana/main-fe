@@ -62,8 +62,8 @@ export function SignIn() {
               if (!response.credential) throw new Error("No Google credential");
               const res = await signInWithGoogle({ id_token: response.credential });
               await finishLogin(res);
-            } catch {
-              setError("Google sign-in failed");
+            } catch (err) {
+              setError(err instanceof Error ? err.message : String(err));
             }
           },
         });
