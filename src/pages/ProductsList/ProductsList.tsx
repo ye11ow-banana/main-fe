@@ -287,6 +287,17 @@ export function ProductsList({ user }: { user: UserInfo }) {
               </div>
               <div className="grid-2">
                 <div className="field-group">
+                <label>Calories (kcal)</label>
+                <input
+                    type="number"
+                    className="field-input"
+                    value={formData.calories}
+                    placeholder="0"
+                    onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, calories: "" }); }}
+                    onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+                />
+              </div>
+                <div className="field-group">
                   <label>Proteins (g)</label>
                   <input
                     type="number"
@@ -317,17 +328,6 @@ export function ProductsList({ user }: { user: UserInfo }) {
                     placeholder="0"
                     onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, carbs: "" }); }}
                     onChange={(e) => setFormData({ ...formData, carbs: e.target.value })}
-                  />
-                </div>
-                <div className="field-group">
-                  <label>Calories (kcal)</label>
-                  <input
-                    type="number"
-                    className="field-input"
-                    value={formData.calories}
-                    placeholder="0"
-                    onFocus={(e) => { if (e.target.value === "0") setFormData({ ...formData, calories: "" }); }}
-                    onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
                   />
                 </div>
               </div>
