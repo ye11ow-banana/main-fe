@@ -69,20 +69,23 @@ function formatDayDate(isoDatetime: string): string {
 function formatMaybeKg(v: string | number | null): string {
   if (v == null) return "—";
   const n = toNumber(v);
-  return `${n.toFixed(1)} kg`;
+  const formatted = parseFloat(n.toFixed(2));
+  return `${formatted} kg`;
 }
 
 function formatMaybePercent(v: string | number | null): string {
   if (v == null) return "—";
   const n = toNumber(v);
-  return `${n.toFixed(1)}%`;
+  const formatted = parseFloat(n.toFixed(2));
+  return `${formatted}%`;
 }
 
 function formatSignedKg(v: string | number | null): string {
   if (v == null) return "—";
   const n = toNumber(v);
   const sign = n > 0 ? "+" : n < 0 ? "–" : "";
-  return `${sign}${Math.abs(n).toFixed(1)} kg`;
+  const formatted = parseFloat(Math.abs(n).toFixed(2));
+  return `${sign}${formatted} kg`;
 }
 
 function formatMaybeGrams(v: string | number | null | undefined): string {

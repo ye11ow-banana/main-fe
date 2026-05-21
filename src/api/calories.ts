@@ -10,6 +10,11 @@ type PaginationDTO<T> = {
   data: T[];
 };
 
+type BodyWeightDTO = {
+  user_id: string;
+  body_weight: number | null;
+};
+
 export type TrendType = "weight" | "calorie";
 
 export type TrendItem = {
@@ -142,6 +147,8 @@ export type DayProductInput = {
 export type CreateDayRequest = {
   date: string; // YYYY-MM-DD
   user_additional_calories: Record<string, number>; // user_id -> additional_calories
+  user_body_weight: Record<string, number>; // user_id -> body_weight
+  all_body_weights?: Record<string, number>;
   products: DayProductInput[];
 };
 
@@ -150,6 +157,13 @@ export function createCalorieDay(body: CreateDayRequest) {
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+export function getWeightsByDate(date: string) {
+  return authHttp<ResponseDTO<BodyWeightDTO[]>>(
+      `/calorie/days/${date}/weight`,
+      { method: "GET" }
+  );
 }
 
 export function getProducts(q: string = "", page: number = 1) {

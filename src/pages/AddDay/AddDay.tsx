@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getUsers, type UserInfo } from "../../api/auth";
-import { ingestCalorieData, createCalorieDay, getProducts, type Product } from "../../api/calories";
+import {ingestCalorieData, createCalorieDay, getWeightsByDate, getProducts, type Product} from "../../api/calories";
 import "./AddDay.css";
 
 interface AddDayProps {
@@ -48,6 +48,8 @@ export function AddDay({ user }: AddDayProps) {
       .split("T")[0]);
   const [notes, setNotes] = useState("");
   const [userAdditionalCalories, setUserAdditionalCalories] = useState<Record<string, string>>({});
+  const [userBodyWeight, setUserBodyWeight] = useState<Record<string, string>>({});
+  const [initialBodyWeights, setInitialBodyWeights] = useState<Record<string, number | null>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [visitedStep2, setVisitedStep2] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +75,32 @@ export function AddDay({ user }: AddDayProps) {
       }
     };
   }, [imagePreview]);
+
+  useEffect(() => {
+    setUserBodyWeight({});
+    setInitialBodyWeights({});
+
+    getWeightsByDate(date)
+        .then((res) => {
+          const items = res.data;
+
+          if (Array.isArray(items)) {
+            const map: Record<string, number | null> = {};
+
+            items.forEach((item) => {
+              map[item.user_id] = item.body_weight;
+            });
+
+            setInitialBodyWeights(map);
+          } else {
+            setInitialBodyWeights({});
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch initial body weights", err);
+          setInitialBodyWeights({});
+        });
+  }, [date]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -130,8 +158,18 @@ export function AddDay({ user }: AddDayProps) {
     const formattedAdditionalCalories: Record<string, number> = {};
     Object.entries(userAdditionalCalories).forEach(([userId, val]) => {
       const num = parseFloat(val);
-      if (!isNaN(num)) {
-        formattedAdditionalCalories[userId] = num;
+      if (!isNaN(num)) formattedAdditionalCalories[userId] = num;
+    });
+
+    const formattedBodyWeights: Record<string, number> = {};
+    Object.entries(userBodyWeight).forEach(([userId, val]) => {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num > 0) {
+        const initial = initialBodyWeights[userId];
+
+        if (initial === null || num !== initial) {
+          formattedBodyWeights[userId] = num;
+        }
       }
     });
 
@@ -139,20 +177,22 @@ export function AddDay({ user }: AddDayProps) {
       await createCalorieDay({
         date,
         user_additional_calories: formattedAdditionalCalories,
+        user_body_weight: formattedBodyWeights,
+        all_body_weights: formattedBodyWeights,
         products: reviewItems.map(item => ({
           user_id: item.user_id,
           product_id: item.product_id,
           weight: item.weight
-        }))
-      });
-      window.location.href = "/calories-list";
-    } catch (err) {
-      console.error(err);
-      setError("Save failed: " + (err instanceof Error ? err.message : "Unknown error"));
-    } finally {
-      setIsSaving(false);
-    }
-  };
+          }))
+        });
+        window.location.href = "/calories-list";
+      } catch (err) {
+        console.error(err);
+        setError("Save failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      } finally {
+        setIsSaving(false);
+      }
+    };
 
   const addItem = () => {
     const defaultUser = availableUsers[0];
@@ -189,7 +229,6 @@ export function AddDay({ user }: AddDayProps) {
     setActiveRowId(id);
     setProductModalOpen(true);
     setProductSearch("");
-    // We'll let the useEffect handle the initial fetch
   };
 
   const fetchProducts = async (q: string) => {
@@ -224,7 +263,13 @@ export function AddDay({ user }: AddDayProps) {
     const num = parseFloat(val);
     return !isNaN(num) && num !== 0;
   });
-  const isSaveDisabled = isSaving || (reviewItems.length === 0 && !hasAdditionalCalories);
+
+  const hasBodyWeightChanged = Object.values(userBodyWeight).some(val => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num !== 0;
+  });
+
+  const isSaveDisabled = isSaving || (reviewItems.length === 0 && !hasAdditionalCalories && !hasBodyWeightChanged);
 
   return (
     <div className={`add-day-page theme-${theme}`}>
@@ -425,6 +470,49 @@ export function AddDay({ user }: AddDayProps) {
                           })}
                         </div>
                       </div>
+                    )}
+                    {availableUsers.length > 0 && (
+                        <div className="body-weight-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
+                          <h3 className="step-section-title" style={{ fontSize: "16px" }}>Body Weight</h3>
+                          <p className="form-description">Record or update body weights (kg) for this day.</p>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+                            {availableUsers.map(u => {
+                              const userId = u.id;
+                              const initialWeight = initialBodyWeights[userId];
+
+                              const displayValue = userBodyWeight[userId] !== undefined
+                                  ? userBodyWeight[userId]
+                                  : (initialWeight !== null && initialWeight !== undefined
+                                      ? String(initialWeight)
+                                      : "");
+
+                              return (
+                                  <div key={userId} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1" }}>
+                                      <UserAvatar user={u} style={{ width: "24px", height: "24px", fontSize: "10px" }} />
+                                      <span style={{ fontSize: "14px" }}>{u.username}</span>
+                                    </div>
+                                    <input
+                                        className="review-input"
+                                        style={{ width: "120px" }}
+                                        type="number"
+                                        step="0.1"
+                                        placeholder={initialWeight ? String(initialWeight) : "-"}
+                                        value={displayValue}
+                                        onFocus={(e) => {
+                                          if (e.target.value === "0" || e.target.value === String(initialWeight)) {
+                                            setUserBodyWeight({ ...userBodyWeight, [userId]: "" });
+                                          }
+                                        }}
+                                        onChange={(e) =>
+                                            setUserBodyWeight({ ...userBodyWeight, [userId]: e.target.value })
+                                        }
+                                    />
+                                  </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                     )}
                   </div>
                   <div className="form-actions">
