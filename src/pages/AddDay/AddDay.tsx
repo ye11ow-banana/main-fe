@@ -52,6 +52,7 @@ export function AddDay({ user }: AddDayProps) {
   const [initialBodyWeights, setInitialBodyWeights] = useState<Record<string, number | null>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [visitedStep2, setVisitedStep2] = useState(false);
+  const [lastSelectedUserId, setLastSelectedUserId] = useState<string | null>(user.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal states
@@ -195,7 +196,11 @@ export function AddDay({ user }: AddDayProps) {
     };
 
   const addItem = () => {
-    const defaultUser = availableUsers[0];
+    const defaultUser =
+        availableUsers.find(u => u.id === lastSelectedUserId) ||
+        availableUsers.find(u => u.id === user.id) ||
+        availableUsers[0];
+
     setReviewItems([
       ...reviewItems,
       {
@@ -269,7 +274,21 @@ export function AddDay({ user }: AddDayProps) {
     return !isNaN(num) && num !== 0;
   });
 
-  const isSaveDisabled = isSaving || (reviewItems.length === 0 && !hasAdditionalCalories && !hasBodyWeightChanged);
+  const hasInvalidItems = reviewItems.some(item => {
+    const weightNum = parseFloat(item.weight);
+
+    return (
+        !item.product_id ||
+        !item.weight ||
+        isNaN(weightNum) ||
+        weightNum <= 0
+    );
+  });
+
+  const isSaveDisabled =
+      isSaving ||
+      hasInvalidItems ||
+      (reviewItems.length === 0 && !hasAdditionalCalories && !hasBodyWeightChanged);
 
   return (
     <div className={`add-day-page theme-${theme}`}>
@@ -557,7 +576,10 @@ export function AddDay({ user }: AddDayProps) {
                 type="button"
                 className="user-modal-item"
                 onClick={() => {
-                  if (activeRowId) updateItem(activeRowId, { user_id: u.id, user: u.username });
+                  if (activeRowId) {
+                    updateItem(activeRowId, { user_id: u.id, user: u.username });
+                    setLastSelectedUserId(u.id);
+                  }
                   setUserModalOpen(false);
                 }}
               >
