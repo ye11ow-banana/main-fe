@@ -668,7 +668,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
                   type="button"
                   onClick={() => (window.location.href = "/add-day")}
                 >
-                  + Add day
+                  Manage days
                 </button>
               </div>
             </div>
