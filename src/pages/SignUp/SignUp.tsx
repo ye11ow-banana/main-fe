@@ -48,7 +48,7 @@ function storeToken(tokenType: string, accessToken: string) {
   localStorage.setItem("access_token", authHeaderValue);
 }
 
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 export function SignUp() {

@@ -23,7 +23,7 @@ function thumbnailStyle(image?: string | null): CSSProperties | undefined {
 }
 
 import { Header } from "../../components/Header/Header";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 
 export function Home({ user }: { user: UserInfo }) {
   const { theme } = useTheme();

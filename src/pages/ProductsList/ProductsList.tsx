@@ -10,7 +10,7 @@ import {
   type ProductInput,
 } from "../../api/calories";
 import { Header } from "../../components/Header/Header";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 import "./ProductsList.css";
 
 function toNumber(value: string | number): number {
@@ -159,7 +159,7 @@ export function ProductsList({ user }: { user: UserInfo }) {
 
   return (
     <div className={`products-page theme-${theme}`}>
-      <Header user={user} />
+      <Header user={user} profileUrl="/calories/profile" />
 
       <main className="main">
         <div className="container">

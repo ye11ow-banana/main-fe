@@ -9,6 +9,7 @@ import { Profile } from "./pages/Profile/Profile";
 import { SignIn } from "./pages/SignIn/SignIn";
 import { SignUp } from "./pages/SignUp/SignUp";
 import { VerifyEmail } from "./pages/VerifyEmail/VerifyEmail";
+import { ThemeProvider } from "./context/ThemeContext";
 
 function hasAccessToken() {
   return Boolean(localStorage.getItem("access_token"));
@@ -64,11 +65,42 @@ function usePathname() {
   return pathname;
 }
 
-import { ThemeProvider } from "./context/ThemeContext";
+function getDocumentTitle(pathname: string, auth: AuthState): string | null {
+  if (auth.status === "checking") return null;
+
+  if (auth.status === "unauthenticated") {
+    if (pathname === "/sign-in" || pathname === "/signin") return "Sign In";
+    if (pathname === "/sign-up" || pathname === "/signup" || pathname === "/") {
+      return "Sign Up";
+    }
+    return null;
+  }
+
+  if (!auth.user.is_verified) {
+    if (pathname === "/verify-email") return "Verify Email";
+    return null;
+  }
+
+  if (pathname === "/") return "Info";
+  if (pathname === "/calories" || pathname === "/calories-list") return "Calories List";
+  if (pathname === "/products" || pathname === "/products-list") return "Product List";
+  if (pathname === "/add-day") return "Add Day";
+  if (pathname === "/profile") return "Profile";
+  if (pathname === "/calories/profile") return "Calories Profile";
+
+  return null;
+}
 
 export default function App() {
   const pathname = usePathname();
   const auth = useAuthState();
+  const documentTitle = getDocumentTitle(pathname, auth);
+
+  useEffect(() => {
+    if (documentTitle) {
+      document.title = documentTitle;
+    }
+  }, [documentTitle]);
 
   function redirect(to: string) {
     if (window.location.pathname !== to) {
@@ -85,11 +117,9 @@ export default function App() {
     // Requirement: Signup page must be the default when user is not authenticated.
     if (auth.status === "unauthenticated") {
       if (pathname === "/sign-in" || pathname === "/signin") {
-        document.title = "Sign In";
         return <SignIn />;
       }
       if (pathname === "/sign-up" || pathname === "/signup" || pathname === "/") {
-        document.title = "Sign Up";
         return <SignUp />;
       }
       return redirect("/sign-up");
@@ -99,7 +129,6 @@ export default function App() {
     if (!auth.user.is_verified) {
       // Only verify-email is available.
       if (pathname === "/verify-email") {
-        document.title = "Verify Email";
         return <VerifyEmail />;
       }
       return redirect("/verify-email");
@@ -118,28 +147,27 @@ export default function App() {
 
     // Default signed-in route
     if (pathname === "/") {
-      document.title = "Info";
       return <Home user={auth.user} />;
     }
 
     if (pathname === "/calories" || pathname === "/calories-list") {
-      document.title = "Calories List";
       return <CaloriesList user={auth.user} />;
     }
 
     if (pathname === "/products" || pathname === "/products-list") {
-      document.title = "Product List";
       return <ProductsList user={auth.user} />;
     }
 
     if (pathname === "/add-day") {
-      document.title = "Add Day";
       return <AddDay user={auth.user} />;
     }
 
     if (pathname === "/profile") {
-      document.title = "Profile";
-      return <Profile user={auth.user} />;
+      return <Profile user={auth.user} settingsScope="all" />;
+    }
+
+    if (pathname === "/calories/profile") {
+      return <Profile user={auth.user} settingsScope="calorie" />;
     }
 
     // Future pages will be added here; for now route unknown paths to home.

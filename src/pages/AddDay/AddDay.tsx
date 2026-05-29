@@ -17,7 +17,7 @@ interface ReviewItem {
 }
 
 import { Header } from "../../components/Header/Header";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 import React from "react";
 
 const UserAvatar = React.memo(({ user, style }: { user: UserInfo | { username: string, avatar_url?: string | null }, style?: React.CSSProperties }) => {
@@ -292,7 +292,7 @@ export function AddDay({ user }: AddDayProps) {
 
   return (
     <div className={`add-day-page theme-${theme}`}>
-      <Header user={user} />
+      <Header user={user} profileUrl="/calories/profile" />
 
       <main className="main">
         <div className="container">

@@ -4,7 +4,7 @@ import { getMe, signIn, signInWithGoogle, type SignInResponse } from "../../api/
 import { ApiError } from "../../api/http";
 import { parseApiError } from "../../api/errorParsing";
 import { loadGoogleSdk } from "../../lib/google";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 type FieldErrors = Record<string, string>;

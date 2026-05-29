@@ -1,5 +1,11 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
+declare global {
+  interface Window {
+    authHttp?: typeof authHttp;
+  }
+}
+
 type ApiErrorPayload =
   | { error?: { message?: string; field?: string } } // your 401/422 shapes
   | { message?: string }                             // generic
@@ -41,8 +47,6 @@ export async function http<T>(
 
   return data as T;
 }
-
-(window as any).authHttp = authHttp;
 
 function getAccessTokenHeader(): string | null {
   return localStorage.getItem("access_token");
@@ -119,7 +123,7 @@ async function refreshAccessToken(): Promise<void> {
  * - On 401, attempts a single refresh-token flow and retries once.
  * - If refresh fails/expired, clears session and redirects to /sign-in.
  */
-const inflightRequests = new Map<string, Promise<any>>();
+const inflightRequests = new Map<string, Promise<unknown>>();
 
 export async function authHttp<T>(
   path: string,
@@ -131,7 +135,7 @@ export async function authHttp<T>(
     const key = `${path}:${JSON.stringify(options.headers || {})}`;
     const existing = inflightRequests.get(key);
     if (existing) {
-      return existing;
+      return existing as Promise<T>;
     }
 
     const promise = (async () => {
@@ -148,6 +152,8 @@ export async function authHttp<T>(
 
   return _authHttpInternal<T>(path, options);
 }
+
+window.authHttp = authHttp;
 
 async function _authHttpInternal<T>(
   path: string,

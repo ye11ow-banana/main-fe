@@ -97,7 +97,7 @@ function formatMaybeGrams(v: string | number | null | undefined): string {
 }
 
 import { Header } from "../../components/Header/Header";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 
 export function CaloriesList({ user }: { user: UserInfo }) {
   const { theme } = useTheme();
@@ -415,7 +415,7 @@ export function CaloriesList({ user }: { user: UserInfo }) {
 
   return (
     <div className={`calories-page theme-${theme}`}>
-      <Header user={user} />
+      <Header user={user} profileUrl="/calories/profile" />
 
       <main className="main">
         <div className="container">

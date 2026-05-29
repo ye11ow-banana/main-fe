@@ -9,7 +9,7 @@ function onlyDigits(s: string) {
   return s.replace(/\D/g, "");
 }
 
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 import { ThemeToggle } from "../../components/ThemeToggle/ThemeToggle";
 
 export function VerifyEmail() {

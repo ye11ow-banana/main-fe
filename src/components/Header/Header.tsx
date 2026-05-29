@@ -5,9 +5,10 @@ import "./Header.css";
 
 interface HeaderProps {
   user: UserInfo;
+  profileUrl?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user }) => {
+export const Header: React.FC<HeaderProps> = ({ user, profileUrl = "/profile" }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -89,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
             {isDropdownOpen && (
               <div className="avatar-dropdown">
-                <a href="/profile" className="dropdown-item">
+                <a href={profileUrl} className="dropdown-item">
                   Profile
                 </a>
                 <button className="dropdown-item" onClick={handleSignOut}>
