@@ -95,6 +95,33 @@ export function AddDay({ user }: AddDayProps) {
     return fallback;
   };
 
+  const mapExistingDayProducts = (day: DayFullInfo): ReviewItem[] =>
+    (Array.isArray(day.products) ? day.products : []).map((p) => ({
+      id: `existing-${p.id}`,
+      user_id: user.id,
+      user: user.username,
+      product_id: p.id,
+      product_name: p.name,
+      weight: String(Math.round(Number(p.weight) || 0)),
+      persisted_product_id: p.id,
+      original_weight: String(Math.round(Number(p.weight) || 0)),
+    }));
+
+  const mapIngestedProducts = (
+    products: NonNullable<Awaited<ReturnType<typeof ingestCalorieData>>["data"]["products"]>,
+  ): ReviewItem[] =>
+    products.map((p, idx) => {
+      const matchedUser = availableUsers.find(u => u.username.toLowerCase() === p.user.toLowerCase());
+      return {
+        id: `ingest-${idx}-${Date.now()}`,
+        user_id: matchedUser?.id || "",
+        user: p.user,
+        product_id: p.product_id,
+        product_name: p.name,
+        weight: p.weight || "",
+      };
+    });
+
   const populateExistingDay = (day: DayFullInfo) => {
     setExistingDay(day);
     setHasAnalyzed(false);
@@ -103,18 +130,7 @@ export function AddDay({ user }: AddDayProps) {
     setNotes("");
     setImagePreview(null);
     setDeletedProductIds([]);
-    setReviewItems(
-      (Array.isArray(day.products) ? day.products : []).map((p) => ({
-        id: `existing-${p.id}`,
-        user_id: user.id,
-        user: user.username,
-        product_id: p.id,
-        product_name: p.name,
-        weight: String(Math.round(Number(p.weight) || 0)),
-        persisted_product_id: p.id,
-        original_weight: String(Math.round(Number(p.weight) || 0)),
-      })),
-    );
+    setReviewItems(mapExistingDayProducts(day));
     setUserAdditionalCalories({
       [user.id]: String(Math.round(Number(day.additional_calories) || 0)),
     });
@@ -175,56 +191,70 @@ export function AddDay({ user }: AddDayProps) {
   };
 
   const handleAnalyze = async () => {
-    setIsLoadingDay(true);
+    const file = fileInputRef.current?.files?.[0];
+    const hasInputToAnalyze = Boolean(file || notes.trim());
+
     setError(null);
 
-    try {
-      const res = await getCalorieDayDetails(date);
-      populateExistingDay(res.data);
-      return;
-    } catch (err) {
-      if (!(err instanceof ApiError && err.status === 404)) {
-        setError("Load failed: " + getErrorMessage(err, "Unknown error"));
+    if (!hasInputToAnalyze) {
+      setIsLoadingDay(true);
+
+      try {
+        const res = await getCalorieDayDetails(date);
+        populateExistingDay(res.data);
         return;
+      } catch (err) {
+        if (!(err instanceof ApiError && err.status === 404)) {
+          setError("Load failed: " + getErrorMessage(err, "Unknown error"));
+          return;
+        }
+
+        setExistingDay(null);
+        setDeletedProductIds([]);
+      } finally {
+        setIsLoadingDay(false);
       }
 
-      setExistingDay(null);
-      setDeletedProductIds([]);
-    } finally {
-      setIsLoadingDay(false);
-    }
-
-    const file = fileInputRef.current?.files?.[0];
-    if (!file && !notes) {
       setVisitedStep2(true);
       setCurrentStep(2);
       return;
     }
 
     setIsAnalyzing(true);
-    setError(null);
+    setDeletedProductIds([]);
     const formData = new FormData();
     if (file) formData.append("image", file);
-    if (notes) formData.append("description", notes);
+    if (notes.trim()) formData.append("description", notes);
 
     try {
+      let existingDayForDate: DayFullInfo | null = null;
+      try {
+        const existingDayRes = await getCalorieDayDetails(date);
+        existingDayForDate = existingDayRes.data;
+      } catch (err) {
+        if (!(err instanceof ApiError && err.status === 404)) {
+          throw err;
+        }
+      }
+
       const res = await ingestCalorieData(formData);
       setHasAnalyzed(true);
       setVisitedStep2(true);
-      if (res.data && res.data.products) {
-        const items: ReviewItem[] = res.data.products.map((p, idx) => {
-          const matchedUser = availableUsers.find(u => u.username.toLowerCase() === p.user.toLowerCase());
-          return {
-            id: `ingest-${idx}-${Date.now()}`,
-            user_id: matchedUser?.id || "",
-            user: p.user,
-            product_id: p.product_id,
-            product_name: p.name,
-            weight: p.weight || "",
-          };
+      setExistingDay(existingDayForDate);
+      if (existingDayForDate) {
+        setUserAdditionalCalories({
+          [user.id]: String(Math.round(Number(existingDayForDate.additional_calories) || 0)),
         });
-        setReviewItems(items);
+        setUserBodyWeight(
+          existingDayForDate.body_weight == null
+            ? {}
+            : { [user.id]: String(existingDayForDate.body_weight) },
+        );
       }
+
+      const existingItems = existingDayForDate ? mapExistingDayProducts(existingDayForDate) : [];
+      const ingestedItems = res.data?.products ? mapIngestedProducts(res.data.products) : [];
+      setReviewItems([...existingItems, ...ingestedItems]);
       setCurrentStep(2);
     } catch (err) {
       console.error(err);
