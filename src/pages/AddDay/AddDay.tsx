@@ -1,6 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { getUsers, type UserInfo } from "../../api/auth";
-import {ingestCalorieData, createCalorieDay, getWeightsByDate, getProducts, type Product} from "../../api/calories";
+import { ApiError } from "../../api/http";
+import {
+  createCalorieDay,
+  deleteDayProduct,
+  getCalorieDayDetails,
+  getProducts,
+  getWeightsByDate,
+  ingestCalorieData,
+  updateCalorieDayMeasurements,
+  updateDayAdditionalCalories,
+  updateDayProductWeight,
+  type DayFullInfo,
+  type Product,
+} from "../../api/calories";
 import "./AddDay.css";
 
 interface AddDayProps {
@@ -14,6 +27,8 @@ interface ReviewItem {
   product_id: string;
   product_name: string;
   weight: string;
+  persisted_product_id?: string;
+  original_weight?: string;
 }
 
 import { Header } from "../../components/Header/Header";
@@ -40,15 +55,19 @@ export function AddDay({ user }: AddDayProps) {
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingDay, setIsLoadingDay] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
+  const [deletedProductIds, setDeletedProductIds] = useState<string[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserInfo[]>([]);
+  const [existingDay, setExistingDay] = useState<DayFullInfo | null>(null);
 
   const [date, setDate] = useState(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString()
       .split("T")[0]);
   const [notes, setNotes] = useState("");
   const [userAdditionalCalories, setUserAdditionalCalories] = useState<Record<string, string>>({});
   const [userBodyWeight, setUserBodyWeight] = useState<Record<string, string>>({});
+  const [bodyFat, setBodyFat] = useState("");
   const [initialBodyWeights, setInitialBodyWeights] = useState<Record<string, number | null>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [visitedStep2, setVisitedStep2] = useState(false);
@@ -68,6 +87,51 @@ export function AddDay({ user }: AddDayProps) {
       setAvailableUsers(res.data);
     });
   }, []);
+
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    if (err instanceof ApiError) return err.message;
+    if (err instanceof Error) return err.message;
+    return fallback;
+  };
+
+  const populateExistingDay = (day: DayFullInfo) => {
+    setExistingDay(day);
+    setHasAnalyzed(false);
+    setVisitedStep2(true);
+    setCurrentStep(2);
+    setNotes("");
+    setImagePreview(null);
+    setDeletedProductIds([]);
+    setReviewItems(
+      (Array.isArray(day.products) ? day.products : []).map((p) => ({
+        id: `existing-${p.id}`,
+        user_id: user.id,
+        user: user.username,
+        product_id: p.id,
+        product_name: p.name,
+        weight: String(Math.round(Number(p.weight) || 0)),
+        persisted_product_id: p.id,
+        original_weight: String(Math.round(Number(p.weight) || 0)),
+      })),
+    );
+    setUserAdditionalCalories({
+      [user.id]: String(Math.round(Number(day.additional_calories) || 0)),
+    });
+    setUserBodyWeight(
+      day.body_weight == null ? {} : { [user.id]: String(day.body_weight) },
+    );
+    setBodyFat(day.body_fat == null ? "" : String(day.body_fat));
+  };
+
+  const resetSelectedDay = () => {
+    setExistingDay(null);
+    setDeletedProductIds([]);
+    setReviewItems([]);
+    setUserAdditionalCalories({});
+    setBodyFat("");
+    setVisitedStep2(false);
+    setHasAnalyzed(false);
+  };
 
   useEffect(() => {
     return () => {
@@ -112,6 +176,26 @@ export function AddDay({ user }: AddDayProps) {
   };
 
   const handleAnalyze = async () => {
+    setIsLoadingDay(true);
+    setError(null);
+
+    try {
+      const res = await getCalorieDayDetails(date);
+      populateExistingDay(res.data);
+      return;
+    } catch (err) {
+      if (!(err instanceof ApiError && err.status === 404)) {
+        setError("Load failed: " + getErrorMessage(err, "Unknown error"));
+        return;
+      }
+
+      setExistingDay(null);
+      setDeletedProductIds([]);
+      setBodyFat("");
+    } finally {
+      setIsLoadingDay(false);
+    }
+
     const file = fileInputRef.current?.files?.[0];
     if (!file && !notes) {
       setVisitedStep2(true);
@@ -175,21 +259,115 @@ export function AddDay({ user }: AddDayProps) {
     });
 
     try {
-      await createCalorieDay({
-        date,
-        user_additional_calories: formattedAdditionalCalories,
-        user_body_weight: formattedBodyWeights,
-        all_body_weights: formattedBodyWeights,
-        products: reviewItems.map(item => ({
-          user_id: item.user_id,
-          product_id: item.product_id,
-          weight: item.weight
-          }))
+      if (existingDay) {
+        const additionalCaloriesValue = Number(userAdditionalCalories[user.id] || 0);
+        if (!Number.isFinite(additionalCaloriesValue) || additionalCaloriesValue < 0) {
+          setError("Additional calories must be zero or greater.");
+          return;
+        }
+
+        const measurementPayload: { body_weight?: number; body_fat?: number } = {};
+        const bodyWeightValue = userBodyWeight[user.id];
+        if (bodyWeightValue !== undefined && bodyWeightValue !== "") {
+          const nextBodyWeight = Number(bodyWeightValue);
+          if (!Number.isFinite(nextBodyWeight) || nextBodyWeight <= 0) {
+            setError("Body weight must be greater than zero.");
+            return;
+          }
+          if (nextBodyWeight !== Number(existingDay.body_weight)) {
+            measurementPayload.body_weight = nextBodyWeight;
+          }
+        }
+
+        if (bodyFat.trim() !== "") {
+          const nextBodyFat = Number(bodyFat);
+          if (!Number.isFinite(nextBodyFat) || nextBodyFat <= 0) {
+            setError("Body fat must be greater than zero.");
+            return;
+          }
+          if (nextBodyFat !== Number(existingDay.body_fat)) {
+            measurementPayload.body_fat = nextBodyFat;
+          }
+        }
+
+        for (const productId of deletedProductIds) {
+          await deleteDayProduct(existingDay.id, productId);
+        }
+
+        const productsToCreate = [];
+
+        for (const item of reviewItems) {
+          const weight = Number(item.weight);
+          if (!Number.isInteger(weight) || weight <= 0) {
+            setError("Product weights must be positive whole numbers.");
+            return;
+          }
+
+          const persistedProductId = item.persisted_product_id;
+          const changedExistingProduct =
+            Boolean(persistedProductId) &&
+            (item.product_id !== persistedProductId || item.user_id !== user.id);
+
+          if (changedExistingProduct && persistedProductId) {
+            if (!deletedProductIds.includes(persistedProductId)) {
+              await deleteDayProduct(existingDay.id, persistedProductId);
+            }
+            productsToCreate.push({
+              user_id: item.user_id,
+              product_id: item.product_id,
+              weight: item.weight,
+            });
+            continue;
+          }
+
+          if (item.persisted_product_id) {
+            if (String(weight) !== item.original_weight) {
+              await updateDayProductWeight(existingDay.id, item.product_id, weight);
+            }
+            continue;
+          }
+
+          productsToCreate.push({
+            user_id: item.user_id,
+            product_id: item.product_id,
+            weight: item.weight,
+          });
+        }
+
+        if (Object.keys(measurementPayload).length > 0) {
+          await updateCalorieDayMeasurements(existingDay.id, measurementPayload);
+        }
+
+        if (additionalCaloriesValue !== Number(existingDay.additional_calories)) {
+          await updateDayAdditionalCalories(existingDay.id, additionalCaloriesValue);
+        }
+
+        if (productsToCreate.length > 0) {
+          await createCalorieDay({
+            date,
+            user_additional_calories: {},
+            user_body_weight: {},
+            products: productsToCreate,
+          });
+        }
+      } else {
+        await createCalorieDay({
+          date,
+          user_additional_calories: formattedAdditionalCalories,
+          user_body_weight: formattedBodyWeights,
+          all_body_weights: formattedBodyWeights,
+          products: reviewItems.map(item => ({
+            user_id: item.user_id,
+            product_id: item.product_id,
+            weight: item.weight
+            }))
         });
-        window.location.href = "/calories-list";
+      }
+
+      window.location.href = "/calories-list";
       } catch (err) {
         console.error(err);
-        setError("Save failed: " + (err instanceof Error ? err.message : "Unknown error"));
+        setError("Save failed: " + getErrorMessage(err, "Unknown error"));
       } finally {
         setIsSaving(false);
       }
@@ -215,6 +393,14 @@ export function AddDay({ user }: AddDayProps) {
   };
 
   const deleteItem = (id: string) => {
+    const item = reviewItems.find((reviewItem) => reviewItem.id === id);
+    if (item?.persisted_product_id) {
+      setDeletedProductIds((prev) =>
+        prev.includes(item.persisted_product_id!)
+          ? prev
+          : [...prev, item.persisted_product_id!],
+      );
+    }
     setReviewItems(reviewItems.filter((item) => item.id !== id));
   };
 
@@ -263,6 +449,7 @@ export function AddDay({ user }: AddDayProps) {
     u.username.toLowerCase().includes(userSearch.toLowerCase()) &&
     u.id !== activeRow?.user_id
   );
+  const usersForDayInputs = existingDay ? [user] : availableUsers;
 
   const hasAdditionalCalories = Object.values(userAdditionalCalories).some(val => {
     const num = parseFloat(val);
@@ -278,6 +465,7 @@ export function AddDay({ user }: AddDayProps) {
     const weightNum = parseFloat(item.weight);
 
     return (
+        !item.user_id ||
         !item.product_id ||
         !item.weight ||
         isNaN(weightNum) ||
@@ -287,8 +475,14 @@ export function AddDay({ user }: AddDayProps) {
 
   const isSaveDisabled =
       isSaving ||
+      isLoadingDay ||
       hasInvalidItems ||
-      (reviewItems.length === 0 && !hasAdditionalCalories && !hasBodyWeightChanged);
+      (
+          !existingDay &&
+          reviewItems.length === 0 &&
+          !hasAdditionalCalories &&
+          !hasBodyWeightChanged
+      );
 
   return (
     <div className={`add-day-page theme-${theme}`}>
@@ -297,9 +491,9 @@ export function AddDay({ user }: AddDayProps) {
       <main className="main">
         <div className="container">
           <section className="page-header">
-            <h1 className="page-title">Add day</h1>
+            <h1 className="page-title">Manage days</h1>
             <p className="page-subtitle">
-              Attach an image, pick a date and add notes for this day. It will appear in your calories list.
+              Pick a date to edit pasted products, calories and measurements, or add a new day.
             </p>
           </section>
 
@@ -310,10 +504,10 @@ export function AddDay({ user }: AddDayProps) {
                 type="button"
                 onClick={() => setCurrentStep(1)}
               >
-                <span className="progress-step-index">1</span>
-                <span>
-                  <span className="progress-step-label-main">Calories creation</span>
-                  <span className="progress-step-label-sub">Upload data for this day</span>
+                  <span className="progress-step-index">1</span>
+                  <span>
+                  <span className="progress-step-label-main">Day selection</span>
+                  <span className="progress-step-label-sub">Pick a date or paste new data</span>
                 </span>
               </button>
               <div className="progress-line"></div>
@@ -323,10 +517,10 @@ export function AddDay({ user }: AddDayProps) {
                 onClick={() => visitedStep2 && setCurrentStep(2)}
                 disabled={!visitedStep2}
               >
-                <span className="progress-step-index">2</span>
-                <span>
-                  <span className="progress-step-label-main">Result check</span>
-                  <span className="progress-step-label-sub">Review items before saving</span>
+                  <span className="progress-step-index">2</span>
+                  <span>
+                  <span className="progress-step-label-main">Day editor</span>
+                  <span className="progress-step-label-sub">Change products and totals</span>
                 </span>
               </button>
             </div>
@@ -336,7 +530,7 @@ export function AddDay({ user }: AddDayProps) {
                 <div className="step">
                   <div>
                     <h2 className="step-section-title">New daily record</h2>
-                    <p className="form-description">Fill in the details below to analyze this day.</p>
+                    <p className="form-description">Choose a date, then click Analyze to load an existing day or process new pasted data.</p>
                   </div>
                   <div className="form-body">
                     <div className="field-group">
@@ -368,8 +562,11 @@ export function AddDay({ user }: AddDayProps) {
                         className="field-input" 
                         placeholder="Select day"
                         value={date} 
-                        onChange={(e) => setDate(e.target.value)}
-                        disabled={hasAnalyzed}
+                        onChange={(e) => {
+                          setDate(e.target.value);
+                          resetSelectedDay();
+                        }}
+                        disabled={hasAnalyzed && !existingDay}
                       />
                     </div>
                     <div className="field-group">
@@ -385,6 +582,7 @@ export function AddDay({ user }: AddDayProps) {
                         disabled={hasAnalyzed}
                       ></textarea>
                     </div>
+                    {isLoadingDay && <div className="form-description">Loading selected day...</div>}
                     {error && <div className="error-message" style={{ color: "red", marginTop: "1rem" }}>{error}</div>}
                   </div>
                   <div className="form-actions">
@@ -394,7 +592,7 @@ export function AddDay({ user }: AddDayProps) {
                       className="btn-primary" 
                       id="primaryAction"
                       onClick={handleAnalyze}
-                      disabled={isAnalyzing || hasAnalyzed}
+                      disabled={isAnalyzing || isLoadingDay || hasAnalyzed}
                     >
                       {isAnalyzing ? "Analyzing..." : hasAnalyzed ? "Analyzed" : "Analyze"}
                     </button>
@@ -405,8 +603,15 @@ export function AddDay({ user }: AddDayProps) {
               {currentStep === 2 && (
                 <div className="step">
                   <div className="review-section">
-                    <h2 className="step-section-title">Result check</h2>
-                    <p className="form-description">Review detected items, adjust user, product names and grams if needed, then save the day.</p>
+                    <h2 className="step-section-title">
+                      {existingDay ? "Edit selected day" : "Result check"}
+                    </h2>
+                    <p className="form-description">
+                      {existingDay
+                        ? "Change products, grams and additional calories for the selected date."
+                        : "Review detected items, adjust user, product names and grams if needed, then save the day."}
+                    </p>
+                    {isLoadingDay && <div className="form-description">Loading selected day...</div>}
                     <div className="review-items">
                       <div className="review-header">
                         <span>User</span>
@@ -462,12 +667,14 @@ export function AddDay({ user }: AddDayProps) {
                       + Add one more item
                     </button>
 
-                    {availableUsers.length > 0 && (
+                    {usersForDayInputs.length > 0 && (
                       <div className="additional-calories-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
                         <h3 className="step-section-title" style={{ fontSize: "16px" }}>Additional calories</h3>
-                        <p className="form-description">Add extra calories per user (e.g. from snacks).</p>
+                        <p className="form-description">
+                          {existingDay ? "Update extra calories for this day." : "Add extra calories per user (e.g. from snacks)."}
+                        </p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                          {availableUsers.map(u => {
+                          {usersForDayInputs.map(u => {
                             const userId = u.id;
                             return (
                               <div key={userId} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -490,12 +697,14 @@ export function AddDay({ user }: AddDayProps) {
                         </div>
                       </div>
                     )}
-                    {availableUsers.length > 0 && (
+                    {usersForDayInputs.length > 0 && (
                         <div className="body-weight-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
                           <h3 className="step-section-title" style={{ fontSize: "16px" }}>Body Weight</h3>
-                          <p className="form-description">Record or update body weights (kg) for this day.</p>
+                          <p className="form-description">
+                            {existingDay ? "Update your measurements for this day." : "Record or update body weights (kg) for this day."}
+                          </p>
                           <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                            {availableUsers.map(u => {
+                            {usersForDayInputs.map(u => {
                               const userId = u.id;
                               const initialWeight = initialBodyWeights[userId];
 
@@ -530,6 +739,23 @@ export function AddDay({ user }: AddDayProps) {
                                   </div>
                               );
                             })}
+                            {existingDay && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1" }}>
+                                    <UserAvatar user={user} style={{ width: "24px", height: "24px", fontSize: "10px" }} />
+                                    <span style={{ fontSize: "14px" }}>Body fat</span>
+                                  </div>
+                                  <input
+                                      className="review-input"
+                                      style={{ width: "120px" }}
+                                      type="number"
+                                      step="0.1"
+                                      placeholder="-"
+                                      value={bodyFat}
+                                      onChange={(e) => setBodyFat(e.target.value)}
+                                  />
+                                </div>
+                            )}
                           </div>
                         </div>
                     )}

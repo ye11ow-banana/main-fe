@@ -159,6 +159,62 @@ export function createCalorieDay(body: CreateDayRequest) {
   });
 }
 
+export type DayMeasurementUpdate = {
+  body_weight?: number;
+  body_fat?: number;
+};
+
+export function getCalorieDayDetails(targetDate: string) {
+  return authHttp<ResponseDTO<DayFullInfo>>(`/calorie/days/${targetDate}`, {
+    method: "GET",
+  });
+}
+
+export function updateCalorieDayMeasurements(
+  dayId: string,
+  body: DayMeasurementUpdate,
+) {
+  return authHttp<ResponseDTO<{ success: boolean }>>(`/calorie/days/${dayId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateDayAdditionalCalories(dayId: string, value: number) {
+  const query = new URLSearchParams({ value: String(value) });
+
+  return authHttp<ResponseDTO<{ success: boolean }>>(
+    `/calorie/days/${dayId}/additional-calories?${query.toString()}`,
+    { method: "PATCH" },
+  );
+}
+
+export function updateDayProductWeight(
+  dayId: string,
+  productId: string,
+  weight: number,
+) {
+  const query = new URLSearchParams({ weight: String(weight) });
+
+  return authHttp<ResponseDTO<{ success: boolean }>>(
+    `/calorie/days/${dayId}/products/${productId}?${query.toString()}`,
+    { method: "PATCH" },
+  );
+}
+
+export function deleteDayProduct(dayId: string, productId: string) {
+  return authHttp<ResponseDTO<{ success: boolean }>>(
+    `/calorie/days/${dayId}/products/${productId}`,
+    { method: "DELETE" },
+  );
+}
+
+export function deleteCalorieDay(dayId: string) {
+  return authHttp<ResponseDTO<{ success: boolean }>>(`/calorie/days/${dayId}`, {
+    method: "DELETE",
+  });
+}
+
 export function getWeightsByDate(date: string) {
   return authHttp<ResponseDTO<BodyWeightDTO[]>>(
       `/calorie/days/${date}/weight`,

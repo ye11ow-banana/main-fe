@@ -84,7 +84,7 @@ function getDocumentTitle(pathname: string, auth: AuthState): string | null {
   if (pathname === "/") return "Info";
   if (pathname === "/calories" || pathname === "/calories-list") return "Calories List";
   if (pathname === "/products" || pathname === "/products-list") return "Product List";
-  if (pathname === "/add-day") return "Add Day";
+  if (pathname === "/add-day") return "Manage Days";
   if (pathname === "/profile") return "Profile";
   if (pathname === "/calories/profile") return "Calories Profile";
 
