@@ -69,7 +69,6 @@ export function AddDay({ user }: AddDayProps) {
   const [notes, setNotes] = useState("");
   const [userAdditionalCalories, setUserAdditionalCalories] = useState<Record<string, string>>({});
   const [userBodyWeight, setUserBodyWeight] = useState<Record<string, string>>({});
-  const [bodyFat, setBodyFat] = useState("");
   const [initialBodyWeights, setInitialBodyWeights] = useState<Record<string, number | null>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [visitedStep2, setVisitedStep2] = useState(false);
@@ -122,7 +121,6 @@ export function AddDay({ user }: AddDayProps) {
     setUserBodyWeight(
       day.body_weight == null ? {} : { [user.id]: String(day.body_weight) },
     );
-    setBodyFat(day.body_fat == null ? "" : String(day.body_fat));
   };
 
   const resetSelectedDay = () => {
@@ -130,7 +128,6 @@ export function AddDay({ user }: AddDayProps) {
     setDeletedProductIds([]);
     setReviewItems([]);
     setUserAdditionalCalories({});
-    setBodyFat("");
     setVisitedStep2(false);
     setHasAnalyzed(false);
   };
@@ -193,7 +190,6 @@ export function AddDay({ user }: AddDayProps) {
 
       setExistingDay(null);
       setDeletedProductIds([]);
-      setBodyFat("");
     } finally {
       setIsLoadingDay(false);
     }
@@ -268,7 +264,7 @@ export function AddDay({ user }: AddDayProps) {
           return;
         }
 
-        const measurementPayload: { body_weight?: number; body_fat?: number } = {};
+        const measurementPayload: { body_weight?: number } = {};
         const bodyWeightValue = userBodyWeight[user.id];
         if (bodyWeightValue !== undefined && bodyWeightValue !== "") {
           const nextBodyWeight = Number(bodyWeightValue);
@@ -278,17 +274,6 @@ export function AddDay({ user }: AddDayProps) {
           }
           if (nextBodyWeight !== Number(existingDay.body_weight)) {
             measurementPayload.body_weight = nextBodyWeight;
-          }
-        }
-
-        if (bodyFat.trim() !== "") {
-          const nextBodyFat = Number(bodyFat);
-          if (!Number.isFinite(nextBodyFat) || nextBodyFat <= 0) {
-            setError("Body fat must be greater than zero.");
-            return;
-          }
-          if (nextBodyFat !== Number(existingDay.body_fat)) {
-            measurementPayload.body_fat = nextBodyFat;
           }
         }
 
@@ -528,9 +513,9 @@ export function AddDay({ user }: AddDayProps) {
       <main className="main">
         <div className="container">
           <section className="page-header">
-            <h1 className="page-title">Manage days</h1>
+            <h1 className="page-title">Add day</h1>
             <p className="page-subtitle">
-              Pick a date to edit pasted products, calories and measurements, or add a new day.
+              Attach an image, pick a date and add notes for this day. It will appear in your calories list.
             </p>
           </section>
 
@@ -543,8 +528,8 @@ export function AddDay({ user }: AddDayProps) {
               >
                   <span className="progress-step-index">1</span>
                   <span>
-                  <span className="progress-step-label-main">Day selection</span>
-                  <span className="progress-step-label-sub">Pick a date or paste new data</span>
+                  <span className="progress-step-label-main">Calories creation</span>
+                  <span className="progress-step-label-sub">Upload data for this day</span>
                 </span>
               </button>
               <div className="progress-line"></div>
@@ -556,8 +541,8 @@ export function AddDay({ user }: AddDayProps) {
               >
                   <span className="progress-step-index">2</span>
                   <span>
-                  <span className="progress-step-label-main">Day editor</span>
-                  <span className="progress-step-label-sub">Change products and totals</span>
+                  <span className="progress-step-label-main">Result check</span>
+                  <span className="progress-step-label-sub">Review items before saving</span>
                 </span>
               </button>
             </div>
@@ -567,7 +552,7 @@ export function AddDay({ user }: AddDayProps) {
                 <div className="step">
                   <div>
                     <h2 className="step-section-title">New daily record</h2>
-                    <p className="form-description">Choose a date, then click Analyze to load an existing day or process new pasted data.</p>
+                    <p className="form-description">Fill in the details below to analyze this day.</p>
                   </div>
                   <div className="form-body">
                     <div className="field-group">
@@ -640,14 +625,8 @@ export function AddDay({ user }: AddDayProps) {
               {currentStep === 2 && (
                 <div className="step">
                   <div className="review-section">
-                    <h2 className="step-section-title">
-                      {existingDay ? "Edit selected day" : "Result check"}
-                    </h2>
-                    <p className="form-description">
-                      {existingDay
-                        ? "Change products, grams and additional calories for the selected date."
-                        : "Review detected items, adjust user, product names and grams if needed, then save the day."}
-                    </p>
+                    <h2 className="step-section-title">Result check</h2>
+                    <p className="form-description">Review detected items, adjust user, product names and grams if needed, then save the day.</p>
                     {isLoadingDay && <div className="form-description">Loading selected day...</div>}
                     <div className="review-items">
                       <div className="review-header">
@@ -707,9 +686,7 @@ export function AddDay({ user }: AddDayProps) {
                     {usersForDayInputs.length > 0 && (
                       <div className="additional-calories-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
                         <h3 className="step-section-title" style={{ fontSize: "16px" }}>Additional calories</h3>
-                        <p className="form-description">
-                          {existingDay ? "Update extra calories for this day." : "Add extra calories per user (e.g. from snacks)."}
-                        </p>
+                        <p className="form-description">Add extra calories per user (e.g. from snacks).</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
                           {usersForDayInputs.map(u => {
                             const userId = u.id;
@@ -737,9 +714,7 @@ export function AddDay({ user }: AddDayProps) {
                     {usersForDayInputs.length > 0 && (
                         <div className="body-weight-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
                           <h3 className="step-section-title" style={{ fontSize: "16px" }}>Body Weight</h3>
-                          <p className="form-description">
-                            {existingDay ? "Update your measurements for this day." : "Record or update body weights (kg) for this day."}
-                          </p>
+                          <p className="form-description">Record or update body weights (kg) for this day.</p>
                           <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
                             {usersForDayInputs.map(u => {
                               const userId = u.id;
@@ -776,29 +751,6 @@ export function AddDay({ user }: AddDayProps) {
                                   </div>
                               );
                             })}
-                          </div>
-                        </div>
-                    )}
-                    {existingDay && (
-                        <div className="fatness-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
-                          <h3 className="step-section-title" style={{ fontSize: "16px" }}>Fatness</h3>
-                          <p className="form-description">Update body fat percentage for this day.</p>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1" }}>
-                                <UserAvatar user={user} style={{ width: "24px", height: "24px", fontSize: "10px" }} />
-                                <span style={{ fontSize: "14px" }}>{user.username}</span>
-                              </div>
-                              <input
-                                  className="review-input"
-                                  style={{ width: "120px" }}
-                                  type="number"
-                                  step="0.1"
-                                  placeholder="-"
-                                  value={bodyFat}
-                                  onChange={(e) => setBodyFat(e.target.value)}
-                              />
-                            </div>
                           </div>
                         </div>
                     )}
