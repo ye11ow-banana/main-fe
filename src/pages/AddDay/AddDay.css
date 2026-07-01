@@ -524,6 +524,27 @@
       cursor: pointer;
       width: auto;
     }
+    .add-day-page .btn-danger {
+      margin-right: auto;
+      border: 1px solid #DC2626;
+      outline: none;
+      border-radius: var(--radius-pill);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      background: transparent;
+      color: #DC2626;
+      width: auto;
+    }
+    .add-day-page .btn-danger:not(:disabled):hover {
+      background: rgba(220, 38, 38, 0.06);
+    }
+    .add-day-page .btn-danger:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
 
     /* USER MODAL */
     .add-day-page .user-modal-backdrop {

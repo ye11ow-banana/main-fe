@@ -3,6 +3,7 @@ import { getUsers, type UserInfo } from "../../api/auth";
 import { ApiError } from "../../api/http";
 import {
   createCalorieDay,
+  deleteCalorieDay,
   deleteDayProduct,
   getCalorieDayDetails,
   getProducts,
@@ -55,6 +56,7 @@ export function AddDay({ user }: AddDayProps) {
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingDay, setIsDeletingDay] = useState(false);
   const [isLoadingDay, setIsLoadingDay] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
@@ -350,6 +352,19 @@ export function AddDay({ user }: AddDayProps) {
             products: productsToCreate,
           });
         }
+
+        const otherUserBodyWeights = Object.fromEntries(
+          Object.entries(formattedBodyWeights).filter(([userId]) => userId !== user.id),
+        );
+
+        if (Object.keys(otherUserBodyWeights).length > 0) {
+          await createCalorieDay({
+            date,
+            user_additional_calories: {},
+            user_body_weight: otherUserBodyWeights,
+            products: [],
+          });
+        }
       } else {
         await createCalorieDay({
           date,
@@ -372,6 +387,28 @@ export function AddDay({ user }: AddDayProps) {
         setIsSaving(false);
       }
     };
+
+  const handleDeleteDay = async () => {
+    if (!existingDay) return;
+
+    const confirmed = window.confirm(
+      `Delete the day for ${date} and all of its products?`,
+    );
+    if (!confirmed) return;
+
+    setIsDeletingDay(true);
+    setError(null);
+
+    try {
+      await deleteCalorieDay(existingDay.id);
+      window.location.href = "/calories-list";
+    } catch (err) {
+      console.error(err);
+      setError("Delete failed: " + getErrorMessage(err, "Unknown error"));
+    } finally {
+      setIsDeletingDay(false);
+    }
+  };
 
   const addItem = () => {
     const defaultUser =
@@ -449,7 +486,7 @@ export function AddDay({ user }: AddDayProps) {
     u.username.toLowerCase().includes(userSearch.toLowerCase()) &&
     u.id !== activeRow?.user_id
   );
-  const usersForDayInputs = existingDay ? [user] : availableUsers;
+  const usersForDayInputs = availableUsers;
 
   const hasAdditionalCalories = Object.values(userAdditionalCalories).some(val => {
     const num = parseFloat(val);
@@ -739,35 +776,51 @@ export function AddDay({ user }: AddDayProps) {
                                   </div>
                               );
                             })}
-                            {existingDay && (
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1" }}>
-                                    <UserAvatar user={user} style={{ width: "24px", height: "24px", fontSize: "10px" }} />
-                                    <span style={{ fontSize: "14px" }}>Body fat</span>
-                                  </div>
-                                  <input
-                                      className="review-input"
-                                      style={{ width: "120px" }}
-                                      type="number"
-                                      step="0.1"
-                                      placeholder="-"
-                                      value={bodyFat}
-                                      onChange={(e) => setBodyFat(e.target.value)}
-                                  />
-                                </div>
-                            )}
+                          </div>
+                        </div>
+                    )}
+                    {existingDay && (
+                        <div className="fatness-section" style={{ marginTop: "24px", borderTop: "1px solid var(--color-border-subtle)", paddingTop: "16px" }}>
+                          <h3 className="step-section-title" style={{ fontSize: "16px" }}>Fatness</h3>
+                          <p className="form-description">Update body fat percentage for this day.</p>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1" }}>
+                                <UserAvatar user={user} style={{ width: "24px", height: "24px", fontSize: "10px" }} />
+                                <span style={{ fontSize: "14px" }}>{user.username}</span>
+                              </div>
+                              <input
+                                  className="review-input"
+                                  style={{ width: "120px" }}
+                                  type="number"
+                                  step="0.1"
+                                  placeholder="-"
+                                  value={bodyFat}
+                                  onChange={(e) => setBodyFat(e.target.value)}
+                              />
+                            </div>
                           </div>
                         </div>
                     )}
                   </div>
                   <div className="form-actions">
+                    {existingDay && (
+                        <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={handleDeleteDay}
+                            disabled={isDeletingDay || isSaving}
+                        >
+                          {isDeletingDay ? "Deleting..." : "Delete day"}
+                        </button>
+                    )}
                     <button type="button" className="btn-ghost" id="backToStep1" onClick={() => setCurrentStep(1)}>Back</button>
                     <button 
                       type="button" 
                       className="btn-primary" 
                       id="saveButton"
                       onClick={handleSave}
-                      disabled={isSaveDisabled}
+                      disabled={isSaveDisabled || isDeletingDay}
                     >
                       {isSaving ? "Saving..." : "Save"}
                     </button>
