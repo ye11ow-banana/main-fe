@@ -42,6 +42,8 @@ export type DaysSortBy = "most_recent" | "oldest" | "most_calories" | "lowest_we
 
 export type DayProduct = {
   id: string;
+  day_id?: string;
+  user_id?: string;
   name: string;
   weight: string | number;
   proteins: string | number;
@@ -52,6 +54,7 @@ export type DayProduct = {
 
 export type DayFullInfo = {
   id: string;
+  user_id?: string;
   body_weight: string | number | null;
   body_fat: string | number | null;
   trend: string | number | null;
@@ -166,6 +169,12 @@ export type DayMeasurementUpdate = {
 
 export function getCalorieDayDetails(targetDate: string) {
   return authHttp<ResponseDTO<DayFullInfo>>(`/calorie/days/${targetDate}`, {
+    method: "GET",
+  });
+}
+
+export function getCalorieDayDetailsForAllUsers(targetDate: string) {
+  return authHttp<ResponseDTO<DayFullInfo[]>>(`/calorie/days/${targetDate}/all`, {
     method: "GET",
   });
 }

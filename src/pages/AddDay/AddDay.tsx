@@ -6,6 +6,7 @@ import {
   deleteCalorieDay,
   deleteDayProduct,
   getCalorieDayDetails,
+  getCalorieDayDetailsForAllUsers,
   getProducts,
   getWeightsByDate,
   ingestCalorieData,
@@ -29,6 +30,8 @@ interface ReviewItem {
   product_name: string;
   weight: string;
   persisted_product_id?: string;
+  persisted_user_id?: string;
+  persisted_day_id?: string;
   original_weight?: string;
 }
 
@@ -60,9 +63,10 @@ export function AddDay({ user }: AddDayProps) {
   const [isLoadingDay, setIsLoadingDay] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
-  const [deletedProductIds, setDeletedProductIds] = useState<string[]>([]);
+  const [deletedProducts, setDeletedProducts] = useState<{ day_id: string; product_id: string }[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserInfo[]>([]);
   const [existingDay, setExistingDay] = useState<DayFullInfo | null>(null);
+  const [existingDays, setExistingDays] = useState<DayFullInfo[]>([]);
 
   const [date, setDate] = useState(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString()
       .split("T")[0]);
@@ -71,9 +75,11 @@ export function AddDay({ user }: AddDayProps) {
   const [userBodyWeight, setUserBodyWeight] = useState<Record<string, string>>({});
   const [initialBodyWeights, setInitialBodyWeights] = useState<Record<string, number | null>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviewMessage, setImagePreviewMessage] = useState<string | null>(null);
   const [visitedStep2, setVisitedStep2] = useState(false);
   const [lastSelectedUserId, setLastSelectedUserId] = useState<string | null>(user.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imagePreviewUrlRef = useRef<string | null>(null);
 
   // Modal states
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -95,17 +101,37 @@ export function AddDay({ user }: AddDayProps) {
     return fallback;
   };
 
-  const mapExistingDayProducts = (day: DayFullInfo): ReviewItem[] =>
-    (Array.isArray(day.products) ? day.products : []).map((p) => ({
-      id: `existing-${p.id}`,
-      user_id: user.id,
-      user: user.username,
-      product_id: p.id,
-      product_name: p.name,
-      weight: String(Math.round(Number(p.weight) || 0)),
-      persisted_product_id: p.id,
-      original_weight: String(Math.round(Number(p.weight) || 0)),
-    }));
+  const getDayUserId = (day: DayFullInfo) =>
+    day.user_id ||
+    (Array.isArray(day.products) ? day.products.find((p) => p.user_id)?.user_id : undefined) ||
+    user.id;
+
+  const getUserName = (userId: string) => {
+    const itemUser = availableUsers.find((u) => u.id === userId);
+    if (itemUser) return itemUser.username;
+    return userId === user.id ? user.username : "Unknown user";
+  };
+
+  const mapExistingDayProducts = (days: DayFullInfo | DayFullInfo[]): ReviewItem[] =>
+    (Array.isArray(days) ? days : [days]).flatMap((day) =>
+      (Array.isArray(day.products) ? day.products : []).map((p) => {
+        const userId = p.user_id || getDayUserId(day);
+        const weight = String(Math.round(Number(p.weight) || 0));
+
+        return {
+          id: `existing-${day.id}-${p.id}`,
+          user_id: userId,
+          user: getUserName(userId),
+          product_id: p.id,
+          product_name: p.name,
+          weight,
+          persisted_product_id: p.id,
+          persisted_user_id: userId,
+          persisted_day_id: p.day_id || day.id,
+          original_weight: weight,
+        };
+      }),
+    );
 
   const mapIngestedProducts = (
     products: NonNullable<Awaited<ReturnType<typeof ingestCalorieData>>["data"]["products"]>,
@@ -122,26 +148,85 @@ export function AddDay({ user }: AddDayProps) {
       };
     });
 
-  const populateExistingDay = (day: DayFullInfo) => {
-    setExistingDay(day);
+  const getCurrentUserDay = (days: DayFullInfo[]) =>
+    days.find((day) => getDayUserId(day) === user.id) || days[0] || null;
+
+  const mapExistingDayValues = (days: DayFullInfo[]) => {
+    const additionalCalories: Record<string, string> = {};
+    const bodyWeights: Record<string, string> = {};
+
+    days.forEach((day) => {
+      const userId = getDayUserId(day);
+      additionalCalories[userId] = String(
+        Math.round(Number(day.additional_calories) || 0),
+      );
+      if (day.body_weight != null) {
+        bodyWeights[userId] = String(day.body_weight);
+      }
+    });
+
+    return { additionalCalories, bodyWeights };
+  };
+
+  const loadExistingDaysForDate = async (): Promise<DayFullInfo[]> => {
+    try {
+      const res = await getCalorieDayDetailsForAllUsers(date);
+      return Array.isArray(res.data) ? res.data : [];
+    } catch (err) {
+      if (!(err instanceof ApiError && err.status === 404)) {
+        throw err;
+      }
+    }
+
+    const res = await getCalorieDayDetails(date);
+    return [res.data];
+  };
+
+  const clearImagePreview = () => {
+    if (imagePreviewUrlRef.current) {
+      URL.revokeObjectURL(imagePreviewUrlRef.current);
+      imagePreviewUrlRef.current = null;
+    }
+
+    setImagePreview(null);
+    setImagePreviewMessage(null);
+  };
+
+  const isHeicImage = (file: File) => {
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+
+    return (
+      fileType === "image/heic" ||
+      fileType === "image/heif" ||
+      fileName.endsWith(".heic") ||
+      fileName.endsWith(".heif")
+    );
+  };
+
+  const populateExistingDays = (days: DayFullInfo[]) => {
+    const currentUserDay = getCurrentUserDay(days);
+
+    if (!currentUserDay) return;
+
+    setExistingDay(currentUserDay);
+    setExistingDays(days);
     setHasAnalyzed(false);
     setVisitedStep2(true);
     setCurrentStep(2);
     setNotes("");
-    setImagePreview(null);
-    setDeletedProductIds([]);
-    setReviewItems(mapExistingDayProducts(day));
-    setUserAdditionalCalories({
-      [user.id]: String(Math.round(Number(day.additional_calories) || 0)),
-    });
-    setUserBodyWeight(
-      day.body_weight == null ? {} : { [user.id]: String(day.body_weight) },
-    );
+    clearImagePreview();
+    setDeletedProducts([]);
+    setReviewItems(mapExistingDayProducts(days));
+    const existingValues = mapExistingDayValues(days);
+    setUserAdditionalCalories(existingValues.additionalCalories);
+    setUserBodyWeight(existingValues.bodyWeights);
   };
 
   const resetSelectedDay = () => {
     setExistingDay(null);
-    setDeletedProductIds([]);
+    setExistingDays([]);
+    setDeletedProducts([]);
     setReviewItems([]);
     setUserAdditionalCalories({});
     setVisitedStep2(false);
@@ -150,11 +235,12 @@ export function AddDay({ user }: AddDayProps) {
 
   useEffect(() => {
     return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
+      if (imagePreviewUrlRef.current) {
+        URL.revokeObjectURL(imagePreviewUrlRef.current);
+        imagePreviewUrlRef.current = null;
       }
     };
-  }, [imagePreview]);
+  }, []);
 
   useEffect(() => {
     setUserBodyWeight({});
@@ -184,10 +270,25 @@ export function AddDay({ user }: AddDayProps) {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImagePreview(url);
+    clearImagePreview();
+
+    if (!file) {
+      return;
     }
+
+    if (isHeicImage(file)) {
+      setImagePreviewMessage(`${file.name} selected. HEIC preview is not supported in this browser.`);
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    imagePreviewUrlRef.current = url;
+    setImagePreview(url);
+  };
+
+  const handleImagePreviewError = () => {
+    clearImagePreview();
+    setImagePreviewMessage("Image selected, but this browser cannot preview this format.");
   };
 
   const handleAnalyze = async () => {
@@ -200,9 +301,11 @@ export function AddDay({ user }: AddDayProps) {
       setIsLoadingDay(true);
 
       try {
-        const res = await getCalorieDayDetails(date);
-        populateExistingDay(res.data);
-        return;
+        const existingDays = await loadExistingDaysForDate();
+        if (existingDays.length > 0) {
+          populateExistingDays(existingDays);
+          return;
+        }
       } catch (err) {
         if (!(err instanceof ApiError && err.status === 404)) {
           setError("Load failed: " + getErrorMessage(err, "Unknown error"));
@@ -210,7 +313,8 @@ export function AddDay({ user }: AddDayProps) {
         }
 
         setExistingDay(null);
-        setDeletedProductIds([]);
+        setExistingDays([]);
+        setDeletedProducts([]);
       } finally {
         setIsLoadingDay(false);
       }
@@ -221,16 +325,15 @@ export function AddDay({ user }: AddDayProps) {
     }
 
     setIsAnalyzing(true);
-    setDeletedProductIds([]);
+    setDeletedProducts([]);
     const formData = new FormData();
     if (file) formData.append("image", file);
     if (notes.trim()) formData.append("description", notes);
 
     try {
-      let existingDayForDate: DayFullInfo | null = null;
+      let existingDaysForDate: DayFullInfo[] = [];
       try {
-        const existingDayRes = await getCalorieDayDetails(date);
-        existingDayForDate = existingDayRes.data;
+        existingDaysForDate = await loadExistingDaysForDate();
       } catch (err) {
         if (!(err instanceof ApiError && err.status === 404)) {
           throw err;
@@ -240,19 +343,14 @@ export function AddDay({ user }: AddDayProps) {
       const res = await ingestCalorieData(formData);
       setHasAnalyzed(true);
       setVisitedStep2(true);
-      setExistingDay(existingDayForDate);
-      if (existingDayForDate) {
-        setUserAdditionalCalories({
-          [user.id]: String(Math.round(Number(existingDayForDate.additional_calories) || 0)),
-        });
-        setUserBodyWeight(
-          existingDayForDate.body_weight == null
-            ? {}
-            : { [user.id]: String(existingDayForDate.body_weight) },
-        );
-      }
+      const currentUserDay = getCurrentUserDay(existingDaysForDate);
+      setExistingDay(currentUserDay);
+      setExistingDays(existingDaysForDate);
+      const existingValues = mapExistingDayValues(existingDaysForDate);
+      setUserAdditionalCalories(existingValues.additionalCalories);
+      setUserBodyWeight(existingValues.bodyWeights);
 
-      const existingItems = existingDayForDate ? mapExistingDayProducts(existingDayForDate) : [];
+      const existingItems = mapExistingDayProducts(existingDaysForDate);
       const ingestedItems = res.data?.products ? mapIngestedProducts(res.data.products) : [];
       setReviewItems([...existingItems, ...ingestedItems]);
       setCurrentStep(2);
@@ -287,28 +385,15 @@ export function AddDay({ user }: AddDayProps) {
     });
 
     try {
-      if (existingDay) {
-        const additionalCaloriesValue = Number(userAdditionalCalories[user.id] || 0);
-        if (!Number.isFinite(additionalCaloriesValue) || additionalCaloriesValue < 0) {
-          setError("Additional calories must be zero or greater.");
-          return;
-        }
+      const daysForSave = existingDays.length > 0 ? existingDays : existingDay ? [existingDay] : [];
 
-        const measurementPayload: { body_weight?: number } = {};
-        const bodyWeightValue = userBodyWeight[user.id];
-        if (bodyWeightValue !== undefined && bodyWeightValue !== "") {
-          const nextBodyWeight = Number(bodyWeightValue);
-          if (!Number.isFinite(nextBodyWeight) || nextBodyWeight <= 0) {
-            setError("Body weight must be greater than zero.");
-            return;
-          }
-          if (nextBodyWeight !== Number(existingDay.body_weight)) {
-            measurementPayload.body_weight = nextBodyWeight;
-          }
-        }
+      if (daysForSave.length > 0) {
+        const dayByUserId = new Map(
+          daysForSave.map((day) => [getDayUserId(day), day] as const),
+        );
 
-        for (const productId of deletedProductIds) {
-          await deleteDayProduct(existingDay.id, productId);
+        for (const deletedProduct of deletedProducts) {
+          await deleteDayProduct(deletedProduct.day_id, deletedProduct.product_id);
         }
 
         const productsToCreate = [];
@@ -321,13 +406,16 @@ export function AddDay({ user }: AddDayProps) {
           }
 
           const persistedProductId = item.persisted_product_id;
+          const persistedUserId = item.persisted_user_id ?? user.id;
+          const persistedDayId =
+            item.persisted_day_id ?? dayByUserId.get(persistedUserId)?.id ?? daysForSave[0].id;
           const changedExistingProduct =
             Boolean(persistedProductId) &&
-            (item.product_id !== persistedProductId || item.user_id !== user.id);
+            (item.product_id !== persistedProductId || item.user_id !== persistedUserId);
 
           if (changedExistingProduct && persistedProductId) {
-            if (!deletedProductIds.includes(persistedProductId)) {
-              await deleteDayProduct(existingDay.id, persistedProductId);
+            if (!deletedProducts.some((p) => p.day_id === persistedDayId && p.product_id === persistedProductId)) {
+              await deleteDayProduct(persistedDayId, persistedProductId);
             }
             productsToCreate.push({
               user_id: item.user_id,
@@ -339,7 +427,7 @@ export function AddDay({ user }: AddDayProps) {
 
           if (item.persisted_product_id) {
             if (String(weight) !== item.original_weight) {
-              await updateDayProductWeight(existingDay.id, item.product_id, weight);
+              await updateDayProductWeight(persistedDayId, item.product_id, weight);
             }
             continue;
           }
@@ -351,33 +439,55 @@ export function AddDay({ user }: AddDayProps) {
           });
         }
 
-        if (Object.keys(measurementPayload).length > 0) {
-          await updateCalorieDayMeasurements(existingDay.id, measurementPayload);
+        for (const day of daysForSave) {
+          const dayUserId = getDayUserId(day);
+          const additionalCaloriesRaw = userAdditionalCalories[dayUserId];
+
+          if (additionalCaloriesRaw !== undefined) {
+            const additionalCaloriesValue =
+              additionalCaloriesRaw === "" ? 0 : Number(additionalCaloriesRaw);
+            if (!Number.isFinite(additionalCaloriesValue) || additionalCaloriesValue < 0) {
+              setError("Additional calories must be zero or greater.");
+              return;
+            }
+
+            if (additionalCaloriesValue !== Number(day.additional_calories)) {
+              await updateDayAdditionalCalories(day.id, additionalCaloriesValue);
+            }
+          }
+
+          const bodyWeightValue = userBodyWeight[dayUserId];
+          if (bodyWeightValue !== undefined && bodyWeightValue !== "") {
+            const nextBodyWeight = Number(bodyWeightValue);
+            if (!Number.isFinite(nextBodyWeight) || nextBodyWeight <= 0) {
+              setError("Body weight must be greater than zero.");
+              return;
+            }
+            if (nextBodyWeight !== Number(day.body_weight)) {
+              await updateCalorieDayMeasurements(day.id, {
+                body_weight: nextBodyWeight,
+              });
+            }
+          }
         }
 
-        if (additionalCaloriesValue !== Number(existingDay.additional_calories)) {
-          await updateDayAdditionalCalories(existingDay.id, additionalCaloriesValue);
-        }
-
-        if (productsToCreate.length > 0) {
-          await createCalorieDay({
-            date,
-            user_additional_calories: {},
-            user_body_weight: {},
-            products: productsToCreate,
-          });
-        }
-
-        const otherUserBodyWeights = Object.fromEntries(
-          Object.entries(formattedBodyWeights).filter(([userId]) => userId !== user.id),
+        const additionalCaloriesToCreate = Object.fromEntries(
+          Object.entries(formattedAdditionalCalories).filter(([userId]) => !dayByUserId.has(userId)),
+        );
+        const bodyWeightsToCreate = Object.fromEntries(
+          Object.entries(formattedBodyWeights).filter(([userId]) => !dayByUserId.has(userId)),
         );
 
-        if (Object.keys(otherUserBodyWeights).length > 0) {
+        if (
+          productsToCreate.length > 0 ||
+          Object.keys(additionalCaloriesToCreate).length > 0 ||
+          Object.keys(bodyWeightsToCreate).length > 0
+        ) {
           await createCalorieDay({
             date,
-            user_additional_calories: {},
-            user_body_weight: otherUserBodyWeights,
-            products: [],
+            user_additional_calories: additionalCaloriesToCreate,
+            user_body_weight: bodyWeightsToCreate,
+            products: productsToCreate,
           });
         }
       } else {
@@ -404,10 +514,11 @@ export function AddDay({ user }: AddDayProps) {
     };
 
   const handleDeleteDay = async () => {
-    if (!existingDay) return;
+    const daysToDelete = existingDays.length > 0 ? existingDays : existingDay ? [existingDay] : [];
+    if (daysToDelete.length === 0) return;
 
     const confirmed = window.confirm(
-      `Delete the day for ${date} and all of its products?`,
+      `Delete the day for ${date} for all users and all of its products?`,
     );
     if (!confirmed) return;
 
@@ -415,7 +526,9 @@ export function AddDay({ user }: AddDayProps) {
     setError(null);
 
     try {
-      await deleteCalorieDay(existingDay.id);
+      for (const dayId of [...new Set(daysToDelete.map((day) => day.id))]) {
+        await deleteCalorieDay(dayId);
+      }
       window.location.href = "/calories-list";
     } catch (err) {
       console.error(err);
@@ -446,11 +559,11 @@ export function AddDay({ user }: AddDayProps) {
 
   const deleteItem = (id: string) => {
     const item = reviewItems.find((reviewItem) => reviewItem.id === id);
-    if (item?.persisted_product_id) {
-      setDeletedProductIds((prev) =>
-        prev.includes(item.persisted_product_id!)
+    if (item?.persisted_product_id && item.persisted_day_id) {
+      setDeletedProducts((prev) =>
+        prev.some((p) => p.day_id === item.persisted_day_id && p.product_id === item.persisted_product_id)
           ? prev
-          : [...prev, item.persisted_product_id!],
+          : [...prev, { day_id: item.persisted_day_id!, product_id: item.persisted_product_id! }],
       );
     }
     setReviewItems(reviewItems.filter((item) => item.id !== id));
@@ -531,6 +644,7 @@ export function AddDay({ user }: AddDayProps) {
       hasInvalidItems ||
       (
           !existingDay &&
+          existingDays.length === 0 &&
           reviewItems.length === 0 &&
           !hasAdditionalCalories &&
           !hasBodyWeightChanged
@@ -589,10 +703,18 @@ export function AddDay({ user }: AddDayProps) {
                       <label className="field-label" htmlFor="image">Image</label>
                       <span className="field-hint">Choose an image from your computer.</span>
                       <div className="file-input-wrapper">
-                        <input id="image" name="image" type="file" className="file-input" accept="image/*" ref={fileInputRef} disabled={hasAnalyzed} onChange={handleImageChange} />
+                        <input id="image" name="image" type="file" className="file-input" accept="image/*,.heic,.heif" ref={fileInputRef} disabled={hasAnalyzed} onChange={handleImageChange} />
                         <div className="file-visual">
                           {imagePreview ? (
-                            <img src={imagePreview} alt="Preview" className="image-preview" />
+                            <img src={imagePreview} alt="Preview" className="image-preview" onError={handleImagePreviewError} />
+                          ) : imagePreviewMessage ? (
+                            <>
+                              <div className="file-icon">✓</div>
+                              <div>
+                                <div className="file-text-main">Image selected</div>
+                                <div className="file-text-sub">{imagePreviewMessage}</div>
+                              </div>
+                            </>
                           ) : (
                             <>
                               <div className="file-icon">📷</div>
@@ -786,7 +908,7 @@ export function AddDay({ user }: AddDayProps) {
                     )}
                   </div>
                   <div className="form-actions">
-                    {existingDay && (
+                    {(existingDay || existingDays.length > 0) && (
                         <button
                             type="button"
                             className="btn-danger"
