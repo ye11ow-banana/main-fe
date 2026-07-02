@@ -260,6 +260,8 @@ export function AddDay({ user }: AddDayProps) {
     setDeletedProducts([]);
     setReviewItems([]);
     setUserAdditionalCalories({});
+    setUserBodyWeight({});
+    setInitialBodyWeights({});
     setVisitedStep2(false);
     setHasAnalyzed(false);
   };
@@ -273,31 +275,30 @@ export function AddDay({ user }: AddDayProps) {
     };
   }, []);
 
-  useEffect(() => {
+  const loadInitialBodyWeights = async () => {
     setUserBodyWeight({});
     setInitialBodyWeights({});
 
-    getWeightsByDate(date)
-        .then((res) => {
-          const items = res.data;
+    try {
+      const res = await getWeightsByDate(date);
+      const items = res.data;
 
-          if (Array.isArray(items)) {
-            const map: Record<string, number | null> = {};
+      if (Array.isArray(items)) {
+        const map: Record<string, number | null> = {};
 
-            items.forEach((item) => {
-              map[item.user_id] = item.body_weight;
-            });
-
-            setInitialBodyWeights(map);
-          } else {
-            setInitialBodyWeights({});
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to fetch initial body weights", err);
-          setInitialBodyWeights({});
+        items.forEach((item) => {
+          map[item.user_id] = item.body_weight;
         });
-  }, [date]);
+
+        setInitialBodyWeights(map);
+      } else {
+        setInitialBodyWeights({});
+      }
+    } catch (err) {
+      console.error("Failed to fetch initial body weights", err);
+      setInitialBodyWeights({});
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -332,6 +333,7 @@ export function AddDay({ user }: AddDayProps) {
       setIsLoadingDay(true);
 
       try {
+        await loadInitialBodyWeights();
         const existingDays = await loadExistingDaysForDate();
         if (existingDays.length > 0) {
           populateExistingDays(existingDays);
@@ -362,6 +364,7 @@ export function AddDay({ user }: AddDayProps) {
     if (notes.trim()) formData.append("description", notes);
 
     try {
+      await loadInitialBodyWeights();
       let existingDaysForDate: DayFullInfo[] = [];
       try {
         existingDaysForDate = await loadExistingDaysForDate();
