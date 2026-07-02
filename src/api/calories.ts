@@ -202,7 +202,7 @@ export function updateDayAdditionalCalories(dayId: string, value: number) {
 export function updateDayProductWeight(
   dayId: string,
   productId: string,
-  weight: number,
+  weight: string | number,
 ) {
   const query = new URLSearchParams({ weight: String(weight) });
 

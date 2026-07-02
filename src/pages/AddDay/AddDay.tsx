@@ -154,6 +154,9 @@ export function AddDay({ user }: AddDayProps) {
   const formatBodyWeightValue = (value: string | number | null | undefined) =>
     value === null || value === undefined ? "" : String(value).replace(/,/g, ".");
 
+  const isPositiveWholeNumberExpression = (value: string) =>
+    /^\s*[1-9]\d*(?:\s*\+\s*[1-9]\d*)*\s*$/.test(value);
+
   const mapExistingDayProducts = (days: DayFullInfo | DayFullInfo[]): ReviewItem[] =>
     (Array.isArray(days) ? days : [days]).flatMap((day) =>
       (Array.isArray(day.products) ? day.products : []).map((p, index) => {
@@ -421,6 +424,13 @@ export function AddDay({ user }: AddDayProps) {
     });
 
     try {
+      for (const item of reviewItems) {
+        if (!isPositiveWholeNumberExpression(item.weight)) {
+          setError("Product weights must be positive whole numbers or sums.");
+          return;
+        }
+      }
+
       const daysForSave = existingDays.length > 0 ? existingDays : existingDay ? [existingDay] : [];
 
       if (daysForSave.length > 0) {
@@ -435,9 +445,8 @@ export function AddDay({ user }: AddDayProps) {
         const productsToCreate = [];
 
         for (const item of reviewItems) {
-          const weight = Number(item.weight);
-          if (!Number.isInteger(weight) || weight <= 0) {
-            setError("Product weights must be positive whole numbers.");
+          if (!isPositiveWholeNumberExpression(item.weight)) {
+            setError("Product weights must be positive whole numbers or sums.");
             return;
           }
 
@@ -462,8 +471,8 @@ export function AddDay({ user }: AddDayProps) {
           }
 
           if (item.persisted_product_id) {
-            if (String(weight) !== item.original_weight) {
-              await updateDayProductWeight(persistedDayId, item.product_id, weight);
+            if (item.weight !== item.original_weight) {
+              await updateDayProductWeight(persistedDayId, item.product_id, item.weight);
             }
             continue;
           }
@@ -678,14 +687,11 @@ export function AddDay({ user }: AddDayProps) {
   });
 
   const hasInvalidItems = reviewItems.some(item => {
-    const weightNum = parseFloat(item.weight);
-
     return (
         !item.user_id ||
         !item.product_id ||
         !item.weight ||
-        isNaN(weightNum) ||
-        weightNum <= 0
+        !isPositiveWholeNumberExpression(item.weight)
     );
   });
 
