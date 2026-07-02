@@ -35,6 +35,8 @@ interface ReviewItem {
   original_weight?: string;
 }
 
+type ReviewItemStatus = "saved" | "new" | "changed";
+
 import { Header } from "../../components/Header/Header";
 import { useTheme } from "../../context/useTheme";
 import React from "react";
@@ -652,6 +654,19 @@ export function AddDay({ user }: AddDayProps) {
   );
   const usersForDayInputs = availableUsers;
 
+  const getReviewItemStatus = (item: ReviewItem): ReviewItemStatus => {
+    if (!item.persisted_product_id) {
+      return "new";
+    }
+
+    const hasChanged =
+      item.product_id !== item.persisted_product_id ||
+      item.user_id !== item.persisted_user_id ||
+      item.weight !== item.original_weight;
+
+    return hasChanged ? "changed" : "saved";
+  };
+
   const hasAdditionalCalories = Object.values(userAdditionalCalories).some(val => {
     const num = parseFloat(val);
     return !isNaN(num) && num !== 0;
@@ -821,13 +836,21 @@ export function AddDay({ user }: AddDayProps) {
                         <span>User</span>
                         <span>Product name</span>
                         <span>Grams</span>
+                        <span>Status</span>
                         <span></span>
                       </div>
                       <div id="itemsContainer">
                         {reviewItems.map((item, index) => {
                           const itemUser = availableUsers.find(u => u.id === item.user_id);
+                          const itemStatus = getReviewItemStatus(item);
+                          const statusLabel =
+                            itemStatus === "new"
+                              ? "New"
+                              : itemStatus === "changed"
+                                ? "Changed"
+                                : "Saved";
                           return (
-                            <div key={item.id} className="review-row">
+                            <div key={item.id} className={`review-row review-row--${itemStatus}`}>
                               <button 
                                 type="button" 
                                 className="review-user" 
@@ -854,6 +877,9 @@ export function AddDay({ user }: AddDayProps) {
                                 onChange={(e) => updateItem(item.id, { weight: e.target.value })}
                                 placeholder="0"
                               />
+                              <span className={`review-status review-status--${itemStatus}`}>
+                                {statusLabel}
+                              </span>
                               <button 
                                 type="button" 
                                 className="btn-delete-item" 

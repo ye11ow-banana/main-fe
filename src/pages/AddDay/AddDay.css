@@ -13,6 +13,14 @@
       --color-input-border: #E5E7EB;
       --color-input-placeholder: #9CA3AF;
       --color-modal-bg: #FFFFFF;
+      --color-status-new-bg: #ECFDF5;
+      --color-status-new-border: #86EFAC;
+      --color-status-new-text: #047857;
+      --color-status-changed-bg: #FFFBEB;
+      --color-status-changed-border: #FCD34D;
+      --color-status-changed-text: #B45309;
+      --color-status-saved-bg: #F3F4F6;
+      --color-status-saved-text: #6B7280;
       --icon-bell: url("/notification-icon-light.png");
     }
 
@@ -27,6 +35,14 @@
       --color-input-placeholder: #6B7280;
       --color-modal-bg: #111827;
       --color-bg-hover: rgba(255, 255, 255, 0.05);
+      --color-status-new-bg: rgba(16, 185, 129, 0.14);
+      --color-status-new-border: rgba(52, 211, 153, 0.55);
+      --color-status-new-text: #6EE7B7;
+      --color-status-changed-bg: rgba(245, 158, 11, 0.16);
+      --color-status-changed-border: rgba(251, 191, 36, 0.6);
+      --color-status-changed-text: #FCD34D;
+      --color-status-saved-bg: rgba(148, 163, 184, 0.18);
+      --color-status-saved-text: #CBD5E1;
       --icon-bell: url("/notification-icon-dark.png");
     }
 
@@ -381,18 +397,31 @@
     }
     .add-day-page .review-header {
       display: grid;
-      grid-template-columns: auto 2fr 1.1fr auto;
+      grid-template-columns: auto minmax(0, 2fr) minmax(72px, 0.75fr) auto auto;
       gap: 10px;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--color-text-secondary);
+      align-items: center;
     }
     .add-day-page .review-row {
       display: grid;
-      grid-template-columns: auto 2fr 1.1fr auto;
+      grid-template-columns: auto minmax(0, 2fr) minmax(72px, 0.75fr) auto auto;
       gap: 10px;
       align-items: center;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 6px;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .add-day-page .review-row--new {
+      background: var(--color-status-new-bg);
+      border-color: var(--color-status-new-border);
+    }
+    .add-day-page .review-row--changed {
+      background: var(--color-status-changed-bg);
+      border-color: var(--color-status-changed-border);
     }
 
     .add-day-page .review-user {
@@ -437,6 +466,28 @@
 
     .add-day-page .review-input[readonly] {
       cursor: pointer;
+    }
+
+    .add-day-page .review-status {
+      justify-self: start;
+      border-radius: var(--radius-pill);
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .add-day-page .review-status--new {
+      background: var(--color-status-new-bg);
+      color: var(--color-status-new-text);
+    }
+    .add-day-page .review-status--changed {
+      background: var(--color-status-changed-bg);
+      color: var(--color-status-changed-text);
+    }
+    .add-day-page .review-status--saved {
+      background: var(--color-status-saved-bg);
+      color: var(--color-status-saved-text);
     }
 
     .add-day-page #itemsContainer {
@@ -731,12 +782,16 @@
 
       .add-day-page .review-header,
       .add-day-page .review-row {
-        grid-template-columns: auto 1.9fr 1.1fr auto;
+        grid-template-columns: auto minmax(0, 1fr) minmax(58px, 0.55fr) auto auto;
         gap: 6px;
       }
       .add-day-page .review-input {
         font-size: 12px;
         padding: 7px 8px;
+      }
+      .add-day-page .review-status {
+        padding: 4px 6px;
+        font-size: 10px;
       }
 
       .add-day-page .form-actions {
