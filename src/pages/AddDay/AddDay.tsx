@@ -149,6 +149,9 @@ export function AddDay({ user }: AddDayProps) {
     return userId === user.id ? user.username : "Unknown user";
   }, [availableUsers, user.id, user.username]);
 
+  const formatBodyWeightValue = (value: string | number | null | undefined) =>
+    value === null || value === undefined ? "" : String(value).replace(/,/g, ".");
+
   const mapExistingDayProducts = (days: DayFullInfo | DayFullInfo[]): ReviewItem[] =>
     (Array.isArray(days) ? days : [days]).flatMap((day) =>
       (Array.isArray(day.products) ? day.products : []).map((p, index) => {
@@ -198,7 +201,7 @@ export function AddDay({ user }: AddDayProps) {
       additionalCalories[userId] =
         additionalCaloriesValue === 0 ? "" : String(additionalCaloriesValue);
       if (day.body_weight != null) {
-        bodyWeights[userId] = String(day.body_weight);
+        bodyWeights[userId] = formatBodyWeightValue(day.body_weight);
       }
     });
 
@@ -402,7 +405,7 @@ export function AddDay({ user }: AddDayProps) {
 
     const formattedBodyWeights: Record<string, number> = {};
     Object.entries(userBodyWeight).forEach(([userId, val]) => {
-      const num = parseFloat(val);
+      const num = Number(formatBodyWeightValue(val));
       if (!isNaN(num) && num > 0) {
         const initial = initialBodyWeights[userId];
 
@@ -486,7 +489,7 @@ export function AddDay({ user }: AddDayProps) {
 
           const bodyWeightValue = userBodyWeight[dayUserId];
           if (bodyWeightValue !== undefined && bodyWeightValue !== "") {
-            const nextBodyWeight = Number(bodyWeightValue);
+            const nextBodyWeight = Number(formatBodyWeightValue(bodyWeightValue));
             if (!Number.isFinite(nextBodyWeight) || nextBodyWeight <= 0) {
               setError("Body weight must be greater than zero.");
               return;
@@ -652,7 +655,7 @@ export function AddDay({ user }: AddDayProps) {
   });
 
   const hasBodyWeightChanged = Object.values(userBodyWeight).some(val => {
-    const num = parseFloat(val);
+    const num = Number(formatBodyWeightValue(val));
     return !isNaN(num) && num !== 0;
   });
 
@@ -902,10 +905,11 @@ export function AddDay({ user }: AddDayProps) {
                               const initialWeight = initialBodyWeights[userId];
 
                               const displayValue = userBodyWeight[userId] !== undefined
-                                  ? userBodyWeight[userId]
+                                  ? formatBodyWeightValue(userBodyWeight[userId])
                                   : (initialWeight !== null && initialWeight !== undefined
-                                      ? String(initialWeight)
+                                      ? formatBodyWeightValue(initialWeight)
                                       : "");
+                              const initialWeightValue = formatBodyWeightValue(initialWeight);
 
                               return (
                                   <div key={userId} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -916,17 +920,20 @@ export function AddDay({ user }: AddDayProps) {
                                     <input
                                         className="review-input"
                                         style={{ width: "120px" }}
-                                        type="number"
-                                        step="0.1"
-                                        placeholder={initialWeight ? String(initialWeight) : "-"}
+                                        type="text"
+                                        inputMode="decimal"
+                                        placeholder={initialWeight ? initialWeightValue : "-"}
                                         value={displayValue}
                                         onFocus={(e) => {
-                                          if (e.target.value === "0" || e.target.value === String(initialWeight)) {
+                                          if (e.target.value === "0" || e.target.value === initialWeightValue) {
                                             setUserBodyWeight({ ...userBodyWeight, [userId]: "" });
                                           }
                                         }}
                                         onChange={(e) =>
-                                            setUserBodyWeight({ ...userBodyWeight, [userId]: e.target.value })
+                                            setUserBodyWeight({
+                                              ...userBodyWeight,
+                                              [userId]: formatBodyWeightValue(e.target.value),
+                                            })
                                         }
                                     />
                                   </div>
