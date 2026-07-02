@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { getUsers, type UserInfo } from "../../api/auth";
 import { ApiError } from "../../api/http";
 import {
@@ -6,13 +6,13 @@ import {
   deleteCalorieDay,
   deleteDayProduct,
   getCalorieDayDetails,
-  getCalorieDayDetailsForAllUsers,
   getProducts,
   getWeightsByDate,
   ingestCalorieData,
   updateCalorieDayMeasurements,
   updateDayAdditionalCalories,
   updateDayProductWeight,
+  type CalorieDayDetailsItem,
   type DayFullInfo,
   type Product,
 } from "../../api/calories";
@@ -52,6 +52,42 @@ const UserAvatar = React.memo(({ user, style }: { user: UserInfo | { username: s
     </div>
   );
 });
+
+const isWrappedDayDetailsItem = (
+  item: CalorieDayDetailsItem,
+): item is Extract<CalorieDayDetailsItem, { day: DayFullInfo | null }> =>
+  "day" in item;
+
+const normalizeDayDetailsItem = (item: CalorieDayDetailsItem): DayFullInfo | null => {
+  if (!isWrappedDayDetailsItem(item)) {
+    return item;
+  }
+
+  if (!item.day) {
+    return null;
+  }
+
+  const dayUserId = item.day.user_id || item.user_id;
+  const dayId = item.day.id;
+
+  return {
+    ...item.day,
+    user_id: dayUserId,
+    products: (Array.isArray(item.day.products) ? item.day.products : []).map((product) => ({
+      ...product,
+      user_id: product.user_id || dayUserId,
+      day_id: product.day_id || dayId,
+    })),
+  };
+};
+
+const normalizeDayDetailsResponse = (
+  data: CalorieDayDetailsItem | CalorieDayDetailsItem[],
+) =>
+  (Array.isArray(data) ? data : [data]).flatMap((item) => {
+    const day = normalizeDayDetailsItem(item);
+    return day ? [day] : [];
+  });
 
 export function AddDay({ user }: AddDayProps) {
   const { theme } = useTheme();
@@ -101,25 +137,25 @@ export function AddDay({ user }: AddDayProps) {
     return fallback;
   };
 
-  const getDayUserId = (day: DayFullInfo) =>
+  const getDayUserId = useCallback((day: DayFullInfo) =>
     day.user_id ||
     (Array.isArray(day.products) ? day.products.find((p) => p.user_id)?.user_id : undefined) ||
-    user.id;
+    user.id, [user.id]);
 
-  const getUserName = (userId: string) => {
+  const getUserName = useCallback((userId: string) => {
     const itemUser = availableUsers.find((u) => u.id === userId);
     if (itemUser) return itemUser.username;
     return userId === user.id ? user.username : "Unknown user";
-  };
+  }, [availableUsers, user.id, user.username]);
 
   const mapExistingDayProducts = (days: DayFullInfo | DayFullInfo[]): ReviewItem[] =>
     (Array.isArray(days) ? days : [days]).flatMap((day) =>
-      (Array.isArray(day.products) ? day.products : []).map((p) => {
+      (Array.isArray(day.products) ? day.products : []).map((p, index) => {
         const userId = p.user_id || getDayUserId(day);
         const weight = String(Math.round(Number(p.weight) || 0));
 
         return {
-          id: `existing-${day.id}-${p.id}`,
+          id: `existing-${day.id}-${p.id}-${userId}-${index}`,
           user_id: userId,
           user: getUserName(userId),
           product_id: p.id,
@@ -169,17 +205,8 @@ export function AddDay({ user }: AddDayProps) {
   };
 
   const loadExistingDaysForDate = async (): Promise<DayFullInfo[]> => {
-    try {
-      const res = await getCalorieDayDetailsForAllUsers(date);
-      return Array.isArray(res.data) ? res.data : [];
-    } catch (err) {
-      if (!(err instanceof ApiError && err.status === 404)) {
-        throw err;
-      }
-    }
-
     const res = await getCalorieDayDetails(date);
-    return [res.data];
+    return normalizeDayDetailsResponse(res.data);
   };
 
   const clearImagePreview = () => {
@@ -587,17 +614,16 @@ export function AddDay({ user }: AddDayProps) {
     setProductSearch("");
   };
 
-  const fetchProducts = async (q: string) => {
+  const fetchProducts = useCallback(async (q: string) => {
     try {
       const res = await getProducts(q);
-      // getProducts returns PaginationDTO<Product> which has a 'data' array
       const productsList = res.data && Array.isArray(res.data.data) ? res.data.data : [];
-      // Limit to 10 products as per requirement
       setProducts(productsList.slice(0, 10));
     } catch (err) {
       console.error(err);
+      setProducts([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (productModalOpen) {
@@ -606,7 +632,7 @@ export function AddDay({ user }: AddDayProps) {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [productSearch, productModalOpen]);
+  }, [fetchProducts, productSearch, productModalOpen]);
 
 
   const activeRow = reviewItems.find((item) => item.id === activeRowId);

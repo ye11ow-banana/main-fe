@@ -67,6 +67,13 @@ export type DayFullInfo = {
   products: DayProduct[];
 };
 
+export type CalorieDayDetailsItem =
+  | DayFullInfo
+  | {
+      user_id: string;
+      day: DayFullInfo | null;
+    };
+
 export type CalorieDaysParams = {
   start_date: string; // YYYY-MM-DD
   end_date: string; // YYYY-MM-DD
@@ -168,13 +175,7 @@ export type DayMeasurementUpdate = {
 };
 
 export function getCalorieDayDetails(targetDate: string) {
-  return authHttp<ResponseDTO<DayFullInfo>>(`/calorie/days/${targetDate}`, {
-    method: "GET",
-  });
-}
-
-export function getCalorieDayDetailsForAllUsers(targetDate: string) {
-  return authHttp<ResponseDTO<DayFullInfo[]>>(`/calorie/days/${targetDate}/all`, {
+  return authHttp<ResponseDTO<CalorieDayDetailsItem | CalorieDayDetailsItem[]>>(`/calorie/days/${targetDate}`, {
     method: "GET",
   });
 }
