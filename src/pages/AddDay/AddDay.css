@@ -722,8 +722,12 @@
         margin-top: 24px;
       }
       .add-day-page .btn-primary,
-      .add-day-page .btn-ghost {
+      .add-day-page .btn-ghost,
+      .add-day-page .btn-danger {
         width: 100%;
         text-align: center;
+      }
+      .add-day-page .btn-danger {
+        margin-right: 0;
       }
     }
