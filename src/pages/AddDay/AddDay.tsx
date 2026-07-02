@@ -193,9 +193,9 @@ export function AddDay({ user }: AddDayProps) {
 
     days.forEach((day) => {
       const userId = getDayUserId(day);
-      additionalCalories[userId] = String(
-        Math.round(Number(day.additional_calories) || 0),
-      );
+      const additionalCaloriesValue = Math.round(Number(day.additional_calories) || 0);
+      additionalCalories[userId] =
+        additionalCaloriesValue === 0 ? "" : String(additionalCaloriesValue);
       if (day.body_weight != null) {
         bodyWeights[userId] = String(day.body_weight);
       }
@@ -880,7 +880,6 @@ export function AddDay({ user }: AddDayProps) {
                                   type="number"
                                   placeholder="0"
                                   value={userAdditionalCalories[userId] || ""}
-                                  onFocus={(e) => { if (e.target.value === "0") setUserAdditionalCalories({ ...userAdditionalCalories, [userId]: "" }); }}
                                   onChange={(e) => setUserAdditionalCalories({ ...userAdditionalCalories, [userId]: e.target.value })}
                                 />
                               </div>
