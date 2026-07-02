@@ -674,6 +674,29 @@
       color: var(--color-text-secondary);
       padding: 8px 2px 2px;
     }
+    .add-day-page .delete-confirm-backdrop {
+      align-items: center;
+      padding: 24px 16px;
+    }
+    .add-day-page .delete-confirm-modal {
+      max-width: 360px;
+      gap: 14px;
+    }
+    .add-day-page .delete-confirm-text {
+      margin: 0;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .add-day-page .delete-confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 2px;
+    }
+    .add-day-page .delete-confirm-actions .btn-danger {
+      margin-right: 0;
+    }
 
     /* RESPONSIVE */
     @media (max-width: 768px) {
@@ -729,5 +752,8 @@
       }
       .add-day-page .btn-danger {
         margin-right: 0;
+      }
+      .add-day-page .delete-confirm-actions {
+        flex-direction: column-reverse;
       }
     }

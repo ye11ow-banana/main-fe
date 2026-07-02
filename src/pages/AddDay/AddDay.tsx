@@ -103,6 +103,7 @@ export function AddDay({ user }: AddDayProps) {
   const [availableUsers, setAvailableUsers] = useState<UserInfo[]>([]);
   const [existingDay, setExistingDay] = useState<DayFullInfo | null>(null);
   const [existingDays, setExistingDays] = useState<DayFullInfo[]>([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [date, setDate] = useState(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString()
       .split("T")[0]);
@@ -540,14 +541,16 @@ export function AddDay({ user }: AddDayProps) {
       }
     };
 
-  const handleDeleteDay = async () => {
+  const openDeleteConfirm = () => {
     const daysToDelete = existingDays.length > 0 ? existingDays : existingDay ? [existingDay] : [];
     if (daysToDelete.length === 0) return;
 
-    const confirmed = window.confirm(
-      `Delete the day for ${date} for all users and all of its products?`,
-    );
-    if (!confirmed) return;
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteDay = async () => {
+    const daysToDelete = existingDays.length > 0 ? existingDays : existingDay ? [existingDay] : [];
+    if (daysToDelete.length === 0) return;
 
     setIsDeletingDay(true);
     setError(null);
@@ -560,6 +563,7 @@ export function AddDay({ user }: AddDayProps) {
     } catch (err) {
       console.error(err);
       setError("Delete failed: " + getErrorMessage(err, "Unknown error"));
+      setDeleteConfirmOpen(false);
     } finally {
       setIsDeletingDay(false);
     }
@@ -937,7 +941,7 @@ export function AddDay({ user }: AddDayProps) {
                         <button
                             type="button"
                             className="btn-danger"
-                            onClick={handleDeleteDay}
+                            onClick={openDeleteConfirm}
                             disabled={isDeletingDay || isSaving}
                         >
                           {isDeletingDay ? "Deleting..." : "Delete day"}
@@ -1032,6 +1036,47 @@ export function AddDay({ user }: AddDayProps) {
             ))}
           </div>
           {products.length === 0 && <div className="user-modal-empty">No products found.</div>}
+        </div>
+      </div>
+
+      <div
+        className={`user-modal-backdrop delete-confirm-backdrop ${deleteConfirmOpen ? "is-open" : ""}`}
+        onClick={() => !isDeletingDay && setDeleteConfirmOpen(false)}
+      >
+        <div className="user-modal delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="user-modal-header">
+            <h3 className="user-modal-title">Delete day?</h3>
+            <button
+              type="button"
+              className="user-modal-close"
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={isDeletingDay}
+              aria-label="Close delete confirmation"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="delete-confirm-text">
+            Are you sure you want to delete the day for {date} for all users and all of its products?
+          </p>
+          <div className="delete-confirm-actions">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={isDeletingDay}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={handleDeleteDay}
+              disabled={isDeletingDay}
+            >
+              {isDeletingDay ? "Deleting..." : "Delete"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
